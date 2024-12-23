@@ -84,4 +84,4 @@ class ProductPropertiesFilter(BaseWithORM):
 class ProductResponseWithPagination(BaseWithORM):
     items: list[ProductRead]
     pagination: PaginationMetadata
-    properties: Optional[List[str]] = []
+    properties: List[ProductPropertyRead] = []
