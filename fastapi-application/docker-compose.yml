@@ -24,29 +24,29 @@ services:
       options:
         max-size: 200m
 
-#  nginx:
-#    container_name: distore-nginx
-#    build:
-#      context: ../nginx
-#      dockerfile: nginx.Dockerfile
-#      args:
-#        NGINX_FILE_PATH: ${NGINX_FILE_PATH}
-#        ENV_FILE_PATH: ${ENV_FILE_PATH}
-#    restart: always
-#    ports:
-#      - "80:80"
-#      - "443:443"
-#    depends_on:
-#      - distore-web-api
-#    env_file:
-#      - .env
-#    logging:
-#      options:
-#        max-size: 200m
-#    volumes:
-#      - ./static:/server_static
-#      - /home/distore/distore/ssl:/etc/ssl/distore.one:ro
-#      - /home/distore/distore/front-end:/var/www/html
+  nginx:
+    container_name: distore-nginx
+    build:
+      context: ../nginx
+      dockerfile: nginx.Dockerfile
+      args:
+        NGINX_FILE_PATH: ${NGINX_FILE_PATH}
+        ENV_FILE_PATH: ${ENV_FILE_PATH}
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - distore-web-api
+    env_file:
+      - .env
+    logging:
+      options:
+        max-size: 200m
+    volumes:
+      - ./static:/server_static
+      - /home/distore/distore/ssl:/etc/ssl/distore.one:ro
+      - /home/distore/distore/front-end:/var/www/html
 
   distore-web-api:
     container_name: distore-web-api
