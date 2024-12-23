@@ -1,0 +1,99 @@
+services:
+
+  pg:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - ../pg_data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+  redis:
+    restart: always
+    image: redis:latest
+    command: redis-server --requirepass ${REDIS_PASS}
+    volumes:
+      - ../data-redis:/data
+    ports:
+      - 6379:6379
+    logging:
+      options:
+        max-size: 200m
+
+#  nginx:
+#    container_name: distore-nginx
+#    build:
+#      context: ../nginx
+#      dockerfile: nginx.Dockerfile
+#      args:
+#        NGINX_FILE_PATH: ${NGINX_FILE_PATH}
+#        ENV_FILE_PATH: ${ENV_FILE_PATH}
+#    restart: always
+#    ports:
+#      - "80:80"
+#      - "443:443"
+#    depends_on:
+#      - distore-web-api
+#    env_file:
+#      - .env
+#    logging:
+#      options:
+#        max-size: 200m
+#    volumes:
+#      - ./static:/server_static
+#      - /home/distore/distore/ssl:/etc/ssl/distore.one:ro
+#      - /home/distore/distore/front-end:/var/www/html
+
+  distore-web-api:
+    container_name: distore-web-api
+    build:
+      context: ../
+      dockerfile: web-api.Dockerfile
+    restart: always
+    volumes:
+      - ../:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - pg
+    env_file:
+      - .env
+    logging:
+      options:
+        max-size: 200m
+
+  celery:
+    container_name: distore-celery
+    build:
+      context: ../
+      dockerfile: celery.Dockerfile
+    command: "poetry run celery -A core.celery worker -l info -c 4"
+    restart: always
+    volumes:
+      - ../:/app
+    depends_on:
+      - redis
+    env_file:
+      - .env
+    logging:
+      options:
+        max-size: 100m
+
+  flower:
+    container_name: distore-flower
+    image: mher/flower
+    command: "celery flower"
+    restart: always
+    depends_on:
+      - redis
+    ports:
+      - 5555:5555
+    env_file:
+      - .env
+    logging:
+      options:
+        max-size: 100m
