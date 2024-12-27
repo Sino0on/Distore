@@ -95,17 +95,17 @@ async def main():
         try:
             await save_brands()
         except Exception as e:
-            logger.error(e)
+            logger.exception(e)
 
         try:
             await save_categories()
         except Exception as e:
-            logger.error(e)
+            logger.exception(e)
 
         try:
             await save_products()
         except Exception as e:
-            logger.error(e)
+            logger.exception(e)
 
         await asyncio.sleep(60 * 5)
 
