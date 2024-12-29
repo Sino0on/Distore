@@ -97,3 +97,19 @@ services:
     logging:
       options:
         max-size: 100m
+
+  updater_1c:
+    container_name: distore-updater_1c
+    build:
+      context: ../
+      dockerfile: updater_1c.Dockerfile
+    restart: always
+    volumes:
+      - ../:/app
+    depends_on:
+      - pg
+    env_file:
+      - .env
+    logging:
+      options:
+        max-size: 100m
