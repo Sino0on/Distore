@@ -625,7 +625,7 @@ class Saver1C:
                 images_insert_values.append(
                     {
                         "product_id": product_map[product.uuid_1c],
-                        "url": self._change_url_domain(image_url)
+                        "url": self._change_url_domain(image.url)
                     }
                 )
         logger.info(f"Images insert: {len(images_insert_values)}")
