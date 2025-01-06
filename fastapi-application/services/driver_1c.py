@@ -692,7 +692,7 @@ class Saver1C:
                 products_variations_uuids.append(variation.uuid_1c)
 
             for image in product.images:
-                image_urls.append(image.url)
+                image_urls.append(self._change_url_domain(image.url))
 
         products_to_deactivate = await self.session.execute(
             update(Product)
