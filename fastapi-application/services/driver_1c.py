@@ -352,13 +352,17 @@ class Saver1C:
         categories = await self.session.scalars(stmt)
         return {category.uuid_1c: category.id for category in categories.all()}
 
+    @staticmethod
+    def _change_url_domain(url: str):
+        return url.replace("rdp.it-help.kg:34521", "distore.one")
+
     async def save_brands(self, brands: list[BrandCreate]):
         insert_stmt = insert(Brand).values(
             [
                 {
                     "name": brand.name,
                     "uuid_1c": brand.uuid_1c,
-                    "image_url": brand.image_url
+                    "image_url": self._change_url_domain(brand.image_url)
                 }
                 for brand in brands
             ]
@@ -619,14 +623,20 @@ class Saver1C:
         for product in products:
             for image in product.images:
                 images_insert_values.append(
-                    {"product_id": product_map[product.uuid_1c], "url": image.url}
+                    {
+                        "product_id": product_map[product.uuid_1c],
+                        "url": self._change_url_domain(image_url)
+                    }
                 )
         logger.info(f"Images insert: {len(images_insert_values)}")
         if images_insert_values:
             images_insert_stmt = insert(ProductImage).values(images_insert_values)
 
-            images_do_update_stmt = images_insert_stmt.on_conflict_do_nothing(
-                constraint="uix_image_product_url"
+            images_do_update_stmt = images_insert_stmt.on_conflict_do_update(
+                constraint="uix_image_product_url",
+                set_={
+                    "url": images_insert_stmt.excluded.url
+                }
             ).returning(ProductImage.id)
 
             images_result = await self.session.execute(images_do_update_stmt)
