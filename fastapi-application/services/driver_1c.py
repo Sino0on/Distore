@@ -466,13 +466,14 @@ class Saver1C:
         }
 
         for key, value in properties_values.items():
+            unique_values = set(i.value for i in value)
             properties_values_insert_values.extend(
                 [
                     {
                         "category_property_id": properties_mapping[key],
-                        "value": i.value,
+                        "value": i,
                     }
-                    for i in value
+                    for i in unique_values
                 ]
             )
 
@@ -480,7 +481,14 @@ class Saver1C:
             properties_values_insert_values
         )
 
-        await self.session.execute(properties_values_insert_stmt)
+        do_update_stmt = properties_values_insert_stmt.on_conflict_do_update(
+            constraint="uix_category_property_value",
+            set_={
+                "value": properties_values_insert_stmt.excluded.value,
+            },
+        ).returning(Value.id)
+
+        await self.session.execute(do_update_stmt)
         await self.session.commit()
 
     async def save_products(self, products: list[ProductCreateSchema]):
