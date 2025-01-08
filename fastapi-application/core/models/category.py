@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -68,6 +68,10 @@ class Value(Base, IdIntPkMixin):
         ForeignKey("category_properties.id")
     )
     category_property: Mapped[CategoryProperty] = relationship(back_populates="values")
+
+    __table_args__ = (
+        UniqueConstraint("category_property_id", "value", name="uix_category_property_value"),
+    )
 
     def __repr__(self):
         return f"value: {self.value}, id: {self.id}, property: {self.category_property_id}"
