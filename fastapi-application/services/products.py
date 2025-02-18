@@ -249,7 +249,10 @@ class ProductService:
     async def get_new_products(self, pagination: Pagination):
         stmt = (
             select(Product)
-            .where(Product.active == True)
+            .where(
+                Product.active == True,
+                Product.variations.any()
+            )
             .order_by(desc(Product.id))
         )
         pagination_metadata = await self.get_pagination_metadata(stmt, pagination)
