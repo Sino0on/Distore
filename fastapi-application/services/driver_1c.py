@@ -254,7 +254,10 @@ class Driver1C:
                 brand_id=brand_id,
                 category_id=categories_map[product_data["category"]],
                 images=[
-                    ProductImageCreateSchema(url=image)
+                    ProductImageCreateSchema(
+                        url=image['path'],
+                        is_main=image['main']
+                    )
                     for image in product_data["images"]
                 ],
                 variations=variations,
@@ -633,7 +636,8 @@ class Saver1C:
                 images_insert_values.append(
                     {
                         "product_id": product_map[product.uuid_1c],
-                        "url": self._change_url_domain(image.url)
+                        "url": self._change_url_domain(image.url),
+                        "is_main": image.is_main
                     }
                 )
         logger.info(f"Images insert: {len(images_insert_values)}")
@@ -643,7 +647,8 @@ class Saver1C:
             images_do_update_stmt = images_insert_stmt.on_conflict_do_update(
                 constraint="uix_image_product_url",
                 set_={
-                    "url": images_insert_stmt.excluded.url
+                    "url": images_insert_stmt.excluded.url,
+                    "is_main": images_insert_stmt.excluded.is_main
                 }
             ).returning(ProductImage.id)
 

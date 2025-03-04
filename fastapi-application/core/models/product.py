@@ -54,6 +54,17 @@ class Product(Base, IdIntPkMixin):
         lazy="selectin",
     )
 
+    @property
+    def main_image(self) -> "ProductImage | None":
+        """
+        Возвращает главное изображение продукта,
+        если оно есть, иначе первое изображение или None.
+        """
+        return next(
+            (img for img in self.images if img.is_main),
+            self.images[0] if self.images else None
+            )
+
     def __repr__(self):
         return self.title
 
@@ -62,6 +73,7 @@ class ProductImage(Base, IdIntPkMixin):
     __tablename__ = "product_images"
 
     url: Mapped[str]
+    is_main: Mapped[bool] = mapped_column(default=False)
 
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
     product: Mapped["Product"] = relationship(back_populates="images")

@@ -30,6 +30,7 @@ class ProductVariationRead(BaseWithORM):
 class ProductImageRead(BaseWithORM):
     id: int
     url: str
+    is_main: bool
 
 
 class ProductRead(BaseWithORM):
@@ -40,6 +41,7 @@ class ProductRead(BaseWithORM):
     category: CategoryForProductRead
     images: List[ProductImageRead] = []
     variations: List[ProductVariationRead]
+    main_image: ProductImageRead | None = None
 
 
     class Config:
@@ -65,6 +67,7 @@ class ProductVariationCreateSchema(BaseWithORM):
 
 class ProductImageCreateSchema(BaseWithORM):
     url: str
+    is_main: bool
 
 
 class ProductCreateSchema(BaseWithORM):
