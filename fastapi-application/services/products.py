@@ -251,10 +251,17 @@ class ProductService:
             select(Product)
             .where(
                 Product.active == True,
-                Product.variations.any()
+                Product.variations.any(
+                    and_(
+                        ProductVariation.quantity > 0,
+                        ProductVariation.active == True,
+                        ProductVariation.price > 0
+                    )
+                ),
             )
             .order_by(desc(Product.id))
         )
+
         pagination_metadata = await self.get_pagination_metadata(stmt, pagination)
 
         stmt = stmt.offset(pagination.page_size * (pagination.page - 1)).limit(pagination.page_size)
