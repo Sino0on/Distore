@@ -55,9 +55,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, UserIdType]):
         request: Optional["Request"] = None,
     ):
         logger.warning(
-            "User %r has forgot their password. Reset token: %r",
-            user.id,
-            token,
+            f"User {user.id} has forgot their password. Reset token: {token}"
         )
 
         send_forget_password_email.apply_async(
