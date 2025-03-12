@@ -89,6 +89,14 @@ async def custom_register(
                 "reason": e.reason,
             },
         )
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "code": ErrorCode.REGISTER_USER_ALREADY_EXISTS,
+                "reason": 'Username has taken',
+            },
+        )
 
     response = await authentication_backend.login(strategy, created_user)
     await user_manager.on_after_login(created_user, request, response)
