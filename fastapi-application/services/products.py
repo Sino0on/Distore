@@ -1,7 +1,7 @@
 from typing import List
 
 from loguru import logger
-from sqlalchemy import select, desc, asc, Select, and_, func
+from sqlalchemy import select, desc, asc, Select, and_, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload, aliased, contains_eager
 
@@ -99,7 +99,15 @@ class ProductService:
             stmt = stmt.where(Category.name.in_(product_filter.category.name__in))
 
         if product_filter.search:
-            stmt = stmt.where(Product.title.ilike(f"%{product_filter.search}%"))
+            search_term = product_filter.search.strip()
+            alternative_term = search_term.replace(" ", "-")
+
+            stmt = stmt.where(
+                or_(
+                    Product.title.ilike(f"%{search_term}%"),
+                    Product.title.ilike(f"%{alternative_term}%")
+                )
+            )
 
 
         return stmt
