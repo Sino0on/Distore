@@ -12,6 +12,8 @@ from core.schemas.brand import BrandRead
 class CategoryForProductRead(BaseWithORM):
     id: int
     name: str
+    name_ky: str
+    name_en: str
 
 
 class ProductPropertyRead(BaseWithORM):
@@ -36,7 +38,11 @@ class ProductImageRead(BaseWithORM):
 class ProductRead(BaseWithORM):
     id: int
     title: str
+    title_ky: Optional[str] = None
+    title_en: Optional[str] = None
     description: Optional[str] = None
+    description_en: Optional[str] = None
+    description_ky: Optional[str] = None
     brand: BrandRead | None = None
     category: CategoryForProductRead
     images: List[ProductImageRead] = []

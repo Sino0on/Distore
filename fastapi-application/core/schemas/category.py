@@ -13,12 +13,16 @@ class CategoryPropertyRead(BaseModel):
 class CategoryRead(BaseModel):
     id: int
     name: str
+    name_ky: str
+    name_en: str
     properties: list[CategoryPropertyRead]
 
 
 class GroupRead(BaseModel):
     id: int
     name: str
+    name_ky: str
+    name_en: str
     categories: list[CategoryRead]
 
 

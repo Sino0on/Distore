@@ -20,7 +20,11 @@ class Product(Base, IdIntPkMixin):
     __tablename__ = "products"
 
     title: Mapped[str]
+    title_ky: Mapped[str] = mapped_column(nullable=True)
+    title_en: Mapped[str] = mapped_column(nullable=True)
     description: Mapped[str | None] = mapped_column(Text)
+    description_en: Mapped[str | None] = mapped_column(Text, nullable=True)
+    description_ky: Mapped[str | None] = mapped_column(Text, nullable=True)
     uuid_1c: Mapped[str] = mapped_column(unique=True)
 
     brand_id: Mapped[int] = mapped_column(ForeignKey("brands.id"), nullable=True)

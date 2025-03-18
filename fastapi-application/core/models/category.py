@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy import ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -9,6 +11,8 @@ class Group(Base, IdIntPkMixin):
     __tablename__ = "groups"
 
     name: Mapped[str]
+    name_ky: Mapped[Optional[str]] = mapped_column(nullable=True)
+    name_en: Mapped[Optional[str]] = mapped_column(nullable=True)
     image_url: Mapped[str] = mapped_column(String, nullable=True)
     uuid_1c: Mapped[str] = mapped_column(unique=True)
 
@@ -25,6 +29,8 @@ class Category(Base, IdIntPkMixin):
     __tablename__ = "categories"
 
     name: Mapped[str]
+    name_ky: Mapped[Optional[str]] = mapped_column(nullable=True)
+    name_en: Mapped[Optional[str]] = mapped_column(nullable=True)
     uuid_1c: Mapped[str] = mapped_column(unique=True)
 
     group_id: Mapped[int] = mapped_column(ForeignKey("groups.id"))
@@ -47,6 +53,8 @@ class CategoryProperty(Base, IdIntPkMixin):
     __tablename__ = "category_properties"
 
     name: Mapped[str]
+    name_ky: Mapped[Optional[str]] = mapped_column(nullable=True)
+    name_en: Mapped[Optional[str]] = mapped_column(nullable=True)
     uuid_1c: Mapped[str] = mapped_column(unique=True)
 
     category_id: Mapped[int] = mapped_column(ForeignKey("categories.id"))
