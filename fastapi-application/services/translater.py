@@ -13,32 +13,32 @@ class Translater:
         models = [Group, Category]
 
         async with db_helper.session_factory() as session:
-            # for model in models:
-            #     stmt = select(model).where(model.name_ky.is_(None) | model.name_en.is_(None))
-            #     result = await session.execute(stmt)
-            #     records = result.scalars().all()
-            #
-            #     for record in records:
-            #         translations = await self.translate_text(record.name)
-            #         record.name_ky = translations["ky"]
-            #         record.name_en = translations["en"]
-            #
-            #     await session.commit()
-            #
-            stmt = select(Product).where(Product.title_ky.is_(None) | Product.title_en.is_(None) | Product.description_ky.is_(None) | Product.description_en.is_(None))
-            result = await session.execute(stmt)
-            records = result.scalars().all()
+            for model in models:
+                stmt = select(model).where(model.name_ky.is_(None) | model.name_en.is_(None))
+                result = await session.execute(stmt)
+                records = result.scalars().all()
 
-            for record in records:
-                try:
-                    translations = await self.translate_text(record.title)
-                    translations_desc = await self.translate_text(record.description)
-                    record.title_ky = translations["ky"]
-                    record.title_en = translations["en"]
-                    record.description_en = translations_desc["en"]
-                    record.description_ky = translations_desc["ky"]
-                except:
-                    pass
+                for record in records:
+                    translations = await self.translate_text(record.name)
+                    record.name_ky = translations["ky"]
+                    record.name_en = translations["en"]
+
+                await session.commit()
+
+            # stmt = select(Product).where(Product.title_ky.is_(None) | Product.title_en.is_(None) | Product.description_ky.is_(None) | Product.description_en.is_(None))
+            # result = await session.execute(stmt)
+            # records = result.scalars().all()
+            #
+            # for record in records:
+            #     try:
+            #         translations = await self.translate_text(record.title)
+            #         translations_desc = await self.translate_text(record.description)
+            #         record.title_ky = translations["ky"]
+            #         record.title_en = translations["en"]
+            #         record.description_en = translations_desc["en"]
+            #         record.description_ky = translations_desc["ky"]
+            #     except:
+            #         pass
 
             await session.commit()
 
