@@ -113,3 +113,18 @@ services:
     logging:
       options:
         max-size: 100m
+
+  translater:
+    container_name: distore-translater
+    build:
+      context: ../
+      dockerfile: translater.Dockerfile
+    volumes:
+      - ../:/app
+    depends_on:
+      - pg
+    env_file:
+      - .env
+    logging:
+      options:
+        max-size: 100m

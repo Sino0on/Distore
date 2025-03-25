@@ -25,20 +25,22 @@ class Translater:
 
                 await session.commit()
 
-            # stmt = select(Product).where(Product.title_ky.is_(None) | Product.title_en.is_(None) | Product.description_ky.is_(None) | Product.description_en.is_(None))
-            # result = await session.execute(stmt)
-            # records = result.scalars().all()
-            #
-            # for record in records:
-            #     try:
-            #         translations = await self.translate_text(record.title)
-            #         translations_desc = await self.translate_text(record.description)
-            #         record.title_ky = translations["ky"]
-            #         record.title_en = translations["en"]
-            #         record.description_en = translations_desc["en"]
-            #         record.description_ky = translations_desc["ky"]
-            #     except:
-            #         pass
+            stmt = select(Product).where(Product.title_ky.is_(None) | Product.title_en.is_(None) | Product.description_ky.is_(None) | Product.description_en.is_(None))
+            result = await session.execute(stmt)
+            records = result.scalars().all()
+            for record in records:
+                try:
+                    translations = await self.translate_text(record.title)
+                    record.title_ky = translations["ky"]
+                    record.title_en = translations["en"]
+                except:
+                    pass
+                try:
+                    translations_desc = await self.translate_text(record.description)
+                    record.description_en = translations_desc["en"]
+                    record.description_ky = translations_desc["ky"]
+                except:
+                    pass
 
             await session.commit()
 

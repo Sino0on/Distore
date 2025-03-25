@@ -1,4 +1,7 @@
+from typing import Optional
+
 from pydantic import BaseModel
+from sqlalchemy.cyextension.util import Mapping
 
 
 class ValueRead(BaseModel):
@@ -13,8 +16,8 @@ class CategoryPropertyRead(BaseModel):
 class CategoryRead(BaseModel):
     id: int
     name: str
-    name_ky: str
-    name_en: str
+    name_ky: Optional[str] = None
+    name_en: Optional[str] = None
     properties: list[CategoryPropertyRead]
 
 
