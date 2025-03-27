@@ -46,7 +46,7 @@ services:
     volumes:
       - ./static:/server_static
       - /home/distore/distore/ssl:/etc/ssl/distore.one:ro
-      - /home/distore/distore/front-end:/var/www/html
+      - /home/distore/distore/front-end-prod/dist:/var/www/html
 
   distore-web-api:
     container_name: distore-web-api
