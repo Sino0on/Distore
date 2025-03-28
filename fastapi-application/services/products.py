@@ -66,7 +66,7 @@ class ProductService:
         return stmt
 
     def _filter_products(
-        self, product_filter: ProductFilter, properties: List[PropertyFilter]
+        self, product_filter: ProductFilter, properties: List[PropertyFilter] = None
     ):
         # Основной запрос для продуктов с отфильтрованными вариациями
         stmt = (
@@ -75,8 +75,8 @@ class ProductService:
             .outerjoin(ProductVariation.properties)
             .where(Product.active == True)
         )
-
-        stmt = self._filter_products_variations_by_properties(stmt, properties)
+        if properties:
+            stmt = self._filter_products_variations_by_properties(stmt, properties)
 
         stmt = self._filter_products_variations(
             product_filter, stmt
@@ -113,7 +113,7 @@ class ProductService:
         return stmt
 
     async def get_properties_for_filtered_products(self, product_filter: ProductFilter,
-                                                   properties: List[PropertyFilter]) -> List[dict]:
+                                                   properties: List[PropertyFilter] = None) -> List[dict]:
         # 1. Фильтрация продуктов (получаем все продукты, соответствующие фильтрам)
         stmt = self._filter_products(product_filter, properties)
 
@@ -241,8 +241,10 @@ class ProductService:
         stmt = stmt.offset(pagination.page_size * (pagination.page - 1)).limit(200)
 
         logger.info(properties)
-        if properties:
+        if properties or product_filter.category or product_filter.category:
             properties = await self.get_properties_for_filtered_products(product_filter, properties)
+        # else:
+        #     properties = await self.get_properties_for_filtered_products(product_filter)
 
 
         result = await self.session.execute(stmt)
