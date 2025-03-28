@@ -3,7 +3,7 @@ from typing import List
 from loguru import logger
 from sqlalchemy import select, desc, asc, Select, and_, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, selectinload, aliased, contains_eager
+from sqlalchemy.orm import joinedload, selectinload, aliased, contains_eager, load_only
 
 from api.dependencies.pagination import Pagination
 from api.dependencies.product.ordering import Ordering
@@ -111,6 +111,13 @@ class ProductService:
 
 
         return stmt
+
+    async def get_properties(self):
+        stmt = select(ProductProperty)
+        result = await self.session.execute(stmt)
+        result = result.scalars().all()
+        return result
+
 
     async def get_properties_for_filtered_products(self, product_filter: ProductFilter,
                                                    properties: List[PropertyFilter] = None) -> List[dict]:
@@ -241,7 +248,7 @@ class ProductService:
         stmt = stmt.offset(pagination.page_size * (pagination.page - 1)).limit(200)
 
         logger.info(properties)
-        if properties or product_filter.category or product_filter.category:
+        if properties or product_filter.category.name__in or product_filter.category.name__in:
             properties = await self.get_properties_for_filtered_products(product_filter, properties)
         # else:
         #     properties = await self.get_properties_for_filtered_products(product_filter)

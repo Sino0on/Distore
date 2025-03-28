@@ -17,6 +17,7 @@ from .messages import router as messages_router
 from .uds import router as uds_router
 from .help_form import router as help_form_router
 from .payments import router as payments_router
+from .properties import router as properties_router
 
 
 http_bearer = HTTPBearer(auto_error=False)
@@ -29,6 +30,7 @@ router.include_router(auth_router)
 router.include_router(users_router)
 router.include_router(brands_router)
 router.include_router(categories_router)
+router.include_router(properties_router)
 router.include_router(products_router)
 router.include_router(carts_router)
 router.include_router(orders_router)

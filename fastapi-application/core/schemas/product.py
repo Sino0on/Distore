@@ -17,7 +17,7 @@ class CategoryForProductRead(BaseWithORM):
 
 
 class ProductPropertyRead(BaseWithORM):
-    id: int
+    id: int = None
     name: str
     value: str
 
