@@ -219,7 +219,7 @@ class ProductService:
 
         if order_by.order_by_created_at is not None:
             direction = desc if order_by.order_by_created_at.startswith("-") else asc
-            order_by_dict["-created_at"] = direction(Product.id)
+            order_by_dict["created_at"] = direction(Product.id)
 
         order_by_list = [order_by_dict[i.strip(" -")] for i in order_by.order_by_list]
 
