@@ -108,6 +108,7 @@ class Config1C(BaseModel):
 class FreedomPayConfig(BaseModel):
     merchant_id: int
     secret_key: str
+    init_payment_url: str
 
 
 class Settings(BaseSettings):

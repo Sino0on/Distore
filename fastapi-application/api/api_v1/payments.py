@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request, BackgroundTasks
+from fastapi import APIRouter, Depends, Request, BackgroundTasks, Body
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -61,3 +61,13 @@ async def result_url(
     data = await request.form()
     return await service.result_url_handler(data, background_tasks)
 
+
+@router.post("/get_payment_url")
+async def get_payment_url(
+        user: Annotated[User, Depends(current_active_user)],
+        session: Annotated[AsyncSession, Depends(db_helper.session_getter)],
+        order_id: int = Body(..., embed=True),
+):
+    service = PaymentsService(session)
+
+    return await service.get_payment_url(user, order_id)

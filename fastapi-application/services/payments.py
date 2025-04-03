@@ -1,18 +1,23 @@
 import hashlib
-from distutils.command.check import check
 
-from fastapi import HTTPException, Response, BackgroundTasks
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.datastructures import FormData
-
+import aiohttp
+import xmltodict
 from core.config import settings
 from core.models import User, Order
 from core.models.order import OrderStatus
-from core.schemas.payments import PaymentSignature, PaymentResult
+from core.schemas.payments import (
+    PaymentSignature,
+    PaymentResult,
+    PaymentRequestParams,
+    PaymentUrlResponse,
+)
+from fastapi import HTTPException, Response, BackgroundTasks, status
+from loguru import logger
 from services.driver_1c import Driver1C
 from services.orders import OrderService
 from services.uds import UDSService
+from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.datastructures import FormData
 
 
 class PaymentsService:
@@ -34,7 +39,10 @@ class PaymentsService:
         self.order_service = OrderService(session)
         self.driver_1c = Driver1C()
 
-    async def _generate_signature(self, params: dict, script_name: str = "payment.php"):
+    async def _generate_signature(
+            self,
+            params: dict,
+            script_name: str = "init_payment.php"):
         # Сортировка параметров и генерация подписи
         sorted_params = dict(sorted(params.items()))
         signature_elements = [script_name] + [
@@ -48,7 +56,9 @@ class PaymentsService:
         return PaymentSignature(signature=signature, params=params)
 
     async def generate_signature(
-            self, user: User, params: dict, script_name: str = "payment.php"
+            self, user: User,
+            params: dict,
+            script_name: str = "init_payment.php",
     ):
         await self.validate_payments_params(user, params)
 
@@ -90,7 +100,8 @@ class PaymentsService:
         order_id = int(params["pg_order_id"])
         order = await self.order_service.get_order(user, order_id)
 
-    async def check_signature(self, signature: str, params: dict, script_name: str):
+    async def check_signature(self, signature: str, params: dict,
+                              script_name: str):
         generated_sig = await self._generate_signature(params, script_name)
 
         if generated_sig.signature != signature:
@@ -202,9 +213,10 @@ class PaymentsService:
                         points=0,
                     )
                 except Exception as e:
-                    logger.error(f"Error creating uds transaction for order: {order.id}")
+                    logger.error(
+                        f"Error creating uds transaction for order: {order.id}"
+                        )
                     logger.error(e)
-
 
         return Response(content=response_xml, media_type="application/xml")
 
@@ -217,6 +229,71 @@ class PaymentsService:
         order_1c_number = data.get("OrderNumber")
 
         if not order_1c_number:
-            raise Exception("Error creating order in 1C: Order number not found")
+            raise Exception(
+                "Error creating order in 1C: Order number not found"
+                )
 
-        await self.order_service.update_order_code_1c(order.id, order_1c_number)
+        await self.order_service.update_order_code_1c(
+            order.id, order_1c_number
+            )
+
+    async def get_payment_url(
+            self,
+            user: User,
+            order_id: int,
+    ) -> PaymentUrlResponse:
+        order = await self.order_service.get_order(user, order_id)
+
+        params = {
+            "pg_order_id": order.id,
+            "pg_merchant_id": settings.freedom_pay_config.merchant_id,
+            "pg_amount": order.total_price,
+            "pg_currency": "KGS",
+            "pg_description": f"Order #{order.id}\nCustomer: {user.nickname}",
+            "pg_salt": 'distore',
+        }
+
+        signature = await self._generate_signature(params)
+
+        request_params = PaymentRequestParams(
+            pg_sig=signature.signature,
+            **params,
+        )
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                    url=settings.freedom_pay_config.init_payment_url,
+                    params={
+                        "pg_sig": signature.signature,
+                        **request_params.dict(),
+                    },
+            ) as response:
+                if response.status != 200:
+                    raise HTTPException(
+                        status_code=response.status,
+                        detail="Error getting payment URL",
+                    )
+
+                response_text = await response.text()
+                response_data = xmltodict.parse(response_text)["response"]
+
+                logger.info(f"Response text: {response_text}")
+                logger.info(f"Response data: {response_data}")
+
+            if response_data.get("pg_status") != "ok":
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Error getting payment URL",
+                )
+
+        await self.check_signature(
+            response_data.pop("pg_sig"),
+            response_data,
+            "init_payment.php",
+        )
+
+        return PaymentUrlResponse(
+            redirect_url=response_data["pg_redirect_url"]
+        )
+
+

@@ -34,3 +34,18 @@ class PaymentResult(BaseModel):
     pg_delivery: Optional[bool] = None
 
     model_config = ConfigDict(extra="allow")
+
+
+class PaymentRequestParams(BaseModel):
+    pg_order_id: int
+    pg_amount: float | int
+    pg_currency: str
+    pg_description: str
+    pg_salt: str = 'distore'
+    pg_sig: str
+
+    model_config = ConfigDict(extra="allow")
+
+
+class PaymentUrlResponse(BaseModel):
+    redirect_url: str
