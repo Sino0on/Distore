@@ -251,6 +251,8 @@ class Driver1C:
                 uuid_1c=product_data["code_1c"],
                 title=product_data["title"],
                 description=product_data["description"],
+                usingmethod=product_data["usingmethod"],
+                composition=product_data["composition"],
                 brand_id=brand_id,
                 category_id=categories_map[product_data["category"]],
                 images=[
@@ -510,6 +512,8 @@ class Saver1C:
                 {
                     "title": product.title,
                     "description": product.description,
+                    "usingmethod": product.usingmethod,
+                    "composition": product.composition,
                     "brand_id": product.brand_id,
                     "category_id": product.category_id,
                     "uuid_1c": product.uuid_1c,
@@ -521,6 +525,8 @@ class Saver1C:
             set_={
                 "title": products_insert_stmt.excluded.title,
                 "description": products_insert_stmt.excluded.description,
+                "usingmethod": products_insert_stmt.excluded.usingmethod,
+                "composition": products_insert_stmt.excluded.composition,
                 "brand_id": products_insert_stmt.excluded.brand_id,
                 "category_id": products_insert_stmt.excluded.category_id,
                 "uuid_1c": products_insert_stmt.excluded.uuid_1c,

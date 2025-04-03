@@ -43,6 +43,8 @@ class ProductRead(BaseWithORM):
     description: Optional[str] = None
     description_en: Optional[str] = None
     description_ky: Optional[str] = None
+    usingmethods: Optional[str] = None
+    composition: Optional[str] = None
     brand: BrandRead | None = None
     category: CategoryForProductRead
     images: List[ProductImageRead] = []
@@ -80,6 +82,8 @@ class ProductCreateSchema(BaseWithORM):
     uuid_1c: str
     title: str
     description: Optional[str] = None
+    usingmethod: Optional[str] = None
+    composition: Optional[str] = None
     brand_id: int | None = None
     category_id: int
     images: List[ProductImageCreateSchema] | None = []

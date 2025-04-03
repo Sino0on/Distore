@@ -25,6 +25,8 @@ class Product(Base, IdIntPkMixin):
     description: Mapped[str | None] = mapped_column(Text)
     description_en: Mapped[str | None] = mapped_column(Text, nullable=True)
     description_ky: Mapped[str | None] = mapped_column(Text, nullable=True)
+    usingmethod: Mapped[str | None] = mapped_column(Text, nullable=True)
+    composition: Mapped[str | None] = mapped_column(Text, nullable=True)
     uuid_1c: Mapped[str] = mapped_column(unique=True)
 
     brand_id: Mapped[int] = mapped_column(ForeignKey("brands.id"), nullable=True)
