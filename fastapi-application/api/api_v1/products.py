@@ -1,6 +1,4 @@
-from tracemalloc import Filter
-
-from fastapi import APIRouter, Depends, Query, Body
+from fastapi import APIRouter, Depends, Body
 from fastapi_filter import FilterDepends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,7 +8,7 @@ from api.dependencies.product.ordering import Ordering
 from core.config import settings
 from core.filters.products import ProductFilter, ProductFilterRequest
 from core.models import db_helper, User
-from core.schemas.product import ProductRead, ProductPropertiesFilter, ProductResponseWithPagination
+from core.schemas.product import ProductRead, ProductResponseWithPagination
 from services.products import ProductService
 
 router = APIRouter(

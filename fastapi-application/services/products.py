@@ -100,12 +100,14 @@ class ProductService:
 
         if product_filter.search:
             search_term = product_filter.search.strip()
-            alternative_term = search_term.replace(" ", "-")
+            search_words = search_term.split()
 
             stmt = stmt.where(
-                or_(
-                    Product.title.ilike(f"%{search_term}%"),
-                    Product.title.ilike(f"%{alternative_term}%")
+                and_(
+                    *(
+                        Product.title.ilike(f"%{word}%")
+                        for word in search_words
+                    )
                 )
             )
 
