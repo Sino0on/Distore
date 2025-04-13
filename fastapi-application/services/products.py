@@ -134,7 +134,7 @@ class ProductService:
             for product in products:
                 for variation in product.variations:
                     for property in variation.properties:
-                        properties_id.append({"name": property.name, "value": property.value})
+                        properties_id.append({"name": property.name, "value": property.value, "id": property.id})
 
         # # 2. Собираем ID продуктов, чтобы использовать в дальнейшем
         # product_ids = [product.id for product in products]
