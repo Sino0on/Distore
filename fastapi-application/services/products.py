@@ -121,43 +121,42 @@ class ProductService:
         return result
 
 
-    async def get_properties_for_filtered_products(self, product_filter: ProductFilter,
+    async def get_properties_for_filtered_products(self, product_filter: ProductFilter, stmt,
                                                    properties: List[PropertyFilter] = None) -> List[dict]:
         # 1. Фильтрация продуктов (получаем все продукты, соответствующие фильтрам)
-        stmt = self._filter_products(product_filter, properties)
+        # stmt = self._filter_products(product_filter, properties)
 
         # Выполняем запрос и получаем отфильтрованные продукты
         result = await self.session.execute(stmt)
         products = result.scalars().unique().all()
+        properties_id = []
+        if products:
+            for product in products:
+                for variation in product.variations:
+                    for property in variation.properties:
+                        properties_id.append({"name": property.name, "value": property.value})
 
-        # 2. Собираем ID продуктов, чтобы использовать в дальнейшем
-        product_ids = [product.id for product in products]
+        # # 2. Собираем ID продуктов, чтобы использовать в дальнейшем
+        # product_ids = [product.id for product in products]
+        #
+        # # 1. Получаем все variation_id, связанные с этими продуктами
+        # stmt_variations = select(ProductVariation.id).where(ProductVariation.product_id.in_(product_ids))
+        # result_variations = await self.session.execute(stmt_variations)
+        # variation_ids = [row[0] for row in result_variations.all()]
+        # # print(variation_ids)
+        # if not variation_ids:
+        #     return []
+        #
+        # # 2. Получаем свойства (name, value) только по этим variation_id
+        # stmt = (
+        #     select(ProductProperty.name, ProductProperty.value)
+        #     .where(ProductProperty.variation_id.in_(variation_ids))
+        #     .distinct()
+        # )
+        # result = await self.session.execute(stmt)
+        return properties_id
 
-        # 3. Получаем все вариации для этих продуктов
-        variations_stmt = (
-            select(ProductVariation)
-            .join(Product)
-            .where(Product.id.in_(product_ids))  # фильтруем по полученным ID продуктов
-        )
-
-        variations_result = await self.session.execute(variations_stmt)
-        variations = variations_result.scalars().all()
-
-        # 4. Получаем свойства для каждой вариации
-        property_stmt = (
-            select(ProductProperty)
-            .where(ProductProperty.variation_id.in_([v.id for v in variations]))  # фильтруем по вариациям
-        )
-
-        properties_result = await self.session.execute(property_stmt)
-        product_properties = properties_result.scalars().all()
-
-        # Формируем итоговый список свойств (с ID, name, value)
-        properties_list = [
-            {"id": prop.id, "name": prop.name, "value": prop.value} for prop in product_properties
-        ]
-
-        return properties_list
+        # return properties_list
 
     @staticmethod
     def _filter_products_variations(
@@ -247,11 +246,13 @@ class ProductService:
 
         pagination_metadata = await self.get_pagination_metadata(stmt, pagination)
 
-        stmt = stmt.offset(pagination.page_size * (pagination.page - 1)).limit(200)
-
         logger.info(properties)
         if properties or product_filter.category.name__in or product_filter.category.name__in:
-            properties = await self.get_properties_for_filtered_products(product_filter, properties)
+            properties = await self.get_properties_for_filtered_products(product_filter, stmt, properties)
+
+        stmt = stmt.offset(pagination.page_size * (pagination.page - 1)).limit(200)
+
+
         # else:
         #     properties = await self.get_properties_for_filtered_products(product_filter)
 
