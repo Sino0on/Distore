@@ -13,6 +13,7 @@ from core.schemas.order import (
     OrderUDSDiscountSchema,
     OrderProductReadWithOrderId,
 )
+from services.delivery import DeliveryService
 from services.orders import OrderService
 
 router = APIRouter(
@@ -55,8 +56,11 @@ async def create_order_from_cart(
     session: Annotated[AsyncSession, Depends(db_helper.session_getter)],
 ):
     service = OrderService(session)
+    sdek_service = DeliveryService(session, settings.sdek_config.client_id, settings.sdek_config.client_secret)
 
-    return await service.create_order_from_cart(user, order_data=order_data)
+    order = await service.create_order_from_cart(user, order_data=order_data)
+    await sdek_service.create_order(order)
+    return order
 
 
 @router.post("/set_uds_discount/", response_model=OrderRead)

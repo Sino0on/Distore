@@ -47,6 +47,7 @@ class OrderProductRead(BaseModel):
 
 class OrderRead(BaseModel):
     id: int
+    sdek_id: str | None = None
     customer_name: str
     customer_phone: str
     customer_email: str
