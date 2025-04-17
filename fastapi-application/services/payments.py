@@ -247,7 +247,7 @@ class PaymentsService:
         params = {
             "pg_order_id": order.id,
             "pg_merchant_id": settings.freedom_pay_config.merchant_id,
-            "pg_amount": order.total_price,
+            "pg_amount": order.final_price,
             "pg_currency": "KGS",
             "pg_description": f"Order #{order.id}\nCustomer: {user.nickname}",
             "pg_salt": 'distore',
