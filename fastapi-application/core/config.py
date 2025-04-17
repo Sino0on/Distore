@@ -23,6 +23,7 @@ class ApiV1Prefix(BaseModel):
     brands: str = "/brands"
     categories: str = "/categories"
     products: str = "/products"
+    delivery: str = "/delivery"
     carts: str = "/carts"
     orders: str = "/orders"
     payments: str = "/payments"
@@ -111,6 +112,11 @@ class FreedomPayConfig(BaseModel):
     init_payment_url: str
 
 
+class SdekConfig(BaseModel):
+    client_id: str
+    client_secret: str
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(".env.template", ".env"),
@@ -129,6 +135,7 @@ class Settings(BaseSettings):
     uds_config: UDSConfig
     config_1c: Config1C
     freedom_pay_config: FreedomPayConfig
+    sdek_config: SdekConfig
 
     domain: str
     page_size_default: int = 20

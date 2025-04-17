@@ -38,6 +38,7 @@ class Order(Base, IdIntPkMixin):
     total_price: Mapped[float]
     promo_code: Mapped[str | None]
     code_1c: Mapped[str | None]
+    sdek_id: Mapped[str | None]
     delivery: Mapped[bool] = mapped_column(default=True)
     discount: Mapped[int] = mapped_column(default=0)
     final_price: Mapped[float]
