@@ -48,7 +48,7 @@ class ProductRead(BaseWithORM):
     description: Optional[str] = None
     description_en: Optional[str] = None
     description_ky: Optional[str] = None
-    usingmethods: Optional[str] = None
+    usingmethod: Optional[str] = None
     composition: Optional[str] = None
     brand: BrandRead | None = None
     category: CategoryForProductRead
