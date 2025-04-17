@@ -11,8 +11,10 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import settings
-from core.models import Brand, Category, Group, CategoryProperty, Value, Product, Order
-from core.models.product import ProductVariation, ProductProperty, ProductImage
+from core.models import Brand, Category, Group, CategoryProperty, Value, \
+    Product, Order
+from core.models.product import ProductVariation, ProductProperty, \
+    ProductImage, ProductVariationImage
 from core.schemas.brand import BrandCreate
 from core.schemas.category import (
     CategoryCreate,
@@ -25,6 +27,7 @@ from core.schemas.product import (
     ProductImageCreateSchema,
     ProductVariationCreateSchema,
     ProductPropertyCreateSchema,
+    ProductVariationImageCreateSchema,
 )
 from core.schemas.schemas_1c import (
     Product1C,
@@ -36,7 +39,10 @@ from core.schemas.schemas_1c import (
 
 
 class Driver1C:
-    AUTH = HTTPBasicAuth(settings.config_1c.username, settings.config_1c.password)
+    AUTH = HTTPBasicAuth(
+        settings.config_1c.username,
+        settings.config_1c.password,
+    )
 
     @classmethod
     def get_brands(cls):
@@ -134,7 +140,9 @@ class Driver1C:
                         CategoryPropertyCreate(
                             uuid_1c=prop["id"],
                             name=prop["name"],
-                            values=[ValueRead(value=value) for value in prop["values"]],
+                            values=[
+                                ValueRead(value=value)
+                                for value in prop["values"]],
                         )
                         for prop in category_data["properties"]
                     ],
@@ -171,11 +179,12 @@ class Driver1C:
     @classmethod
     async def fetch_products(cls, session, category_name):
         async with session.post(
-            url=settings.config_1c.products_url,
-            json={"category": category_name},
-            auth=aiohttp.BasicAuth(
-                settings.config_1c.username, settings.config_1c.password
-            ),
+                url=settings.config_1c.products_url,
+                json={"category": category_name},
+                auth=aiohttp.BasicAuth(
+                    settings.config_1c.username,
+                    settings.config_1c.password,
+                ),
         ) as response:
             if response.status != 200:
                 raise logger.info(
@@ -193,7 +202,8 @@ class Driver1C:
     async def get_products_by_category_list(cls, categories: list):
         async with aiohttp.ClientSession() as session:
             tasks = [
-                cls.fetch_products(session, category["name"]) for category in categories
+                cls.fetch_products(session, category["name"])
+                for category in categories
             ]
             responses = await asyncio.gather(*tasks)
 
@@ -237,6 +247,13 @@ class Driver1C:
                             )
                             for prop in variation_data["properties"]
                         ],
+                        images=[
+                            ProductVariationImageCreateSchema(
+                                url=image["path"],
+                                is_main=image["main"],
+                            )
+                            for image in variation_data["images"]
+                        ]
                     )
                     variations.append(variation)
                 except Exception as e:
@@ -245,7 +262,6 @@ class Driver1C:
                             f"{product_data}\n{variation_data['code_1c']}\n"
                             f"{e}\n\n"
                         )
-
 
             product = ProductCreateSchema(
                 uuid_1c=product_data["code_1c"],
@@ -281,7 +297,8 @@ class Driver1C:
                     variation=Variation1C(
                         properties=[
                             Property1C(name=prop.name, value=prop.value)
-                            for prop in order_product.product_variation.properties
+                            for prop in
+                            order_product.product_variation.properties
                         ]
                     ),
                 )
@@ -314,11 +331,12 @@ class Driver1C:
         async with aiohttp.ClientSession() as session:
             for _ in range(retries):
                 async with session.post(
-                    settings.config_1c.order_create_url,
-                    json=order_1c.model_dump(),
-                    auth=aiohttp.BasicAuth(
-                        settings.config_1c.username, settings.config_1c.password
-                    ),
+                        settings.config_1c.order_create_url,
+                        json=order_1c.model_dump(),
+                        auth=aiohttp.BasicAuth(
+                            settings.config_1c.username,
+                            settings.config_1c.password,
+                        ),
                 ) as response:
                     if not response.status == 200:
                         logger.error(
@@ -334,14 +352,15 @@ class Driver1C:
                         result = await response.json()
                     except json.decoder.JSONDecodeError:
                         logger.error(
-                        f"Error create order request. "
-                        f"Can't parse response. "
-                        f"Error code: {response.status}\n"
-                        f"Message: {await response.text()}"
-                    )
+                            f"Error create order request. "
+                            f"Can't parse response. "
+                            f"Error code: {response.status}\n"
+                            f"Message: {await response.text()}"
+                        )
                     break
 
         return result
+
 
 class Saver1C:
     def __init__(self, session):
@@ -402,7 +421,10 @@ class Saver1C:
         ).returning(Group.id, Group.uuid_1c)
 
         group_result = await self.session.execute(do_update_stmt)
-        group_mapping = {row.uuid_1c: row.id for row in group_result.fetchall()}
+        group_mapping = {
+            row.uuid_1c: row.id
+            for row in group_result.fetchall()
+        }
 
         logger.info(group_mapping)
 
@@ -437,7 +459,10 @@ class Saver1C:
         ).returning(Category.id, Category.uuid_1c)
 
         category_result = await self.session.execute(do_update_stmt)
-        category_mapping = {row.uuid_1c: row.id for row in category_result.fetchall()}
+        category_mapping = {
+            row.uuid_1c: row.id
+            for row in category_result.fetchall()
+        }
 
         properties_insert_values = []
         properties_values_insert_values = []
@@ -535,7 +560,10 @@ class Saver1C:
         ).returning(Product.id, Product.uuid_1c)
 
         product_result = await self.session.execute(do_update_stmt)
-        product_map = {row.uuid_1c: row.id for row in product_result.fetchall()}
+        product_map = {
+            row.uuid_1c: row.id
+            for row in product_result.fetchall()
+        }
 
         variations_insert_values = []
         properties_insert_values = []
@@ -570,8 +598,13 @@ class Saver1C:
                 },
             ).returning(ProductVariation.id, ProductVariation.uuid_1c)
 
-            variations_result = await self.session.execute(variations_do_update_stmt)
-            variations_map = {row.uuid_1c: row.id for row in variations_result.fetchall()}
+            variations_result = await self.session.execute(
+                variations_do_update_stmt
+            )
+            variations_map = {
+                row.uuid_1c: row.id
+                for row in variations_result.fetchall()
+            }
 
             for key, value in properties.items():
                 properties_insert_values.extend(
@@ -617,11 +650,13 @@ class Saver1C:
                                 "value": prop.value,
                             }
                         )
-                        property_stmt = insert(ProductProperty).values([{
+                        property_stmt = insert(ProductProperty).values(
+                            [{
                                 "variation_id": variations_map[key],
                                 "name": prop.name,
                                 "value": prop.value,
-                            }])
+                            }]
+                        )
                         property_do_update_stmt = property_stmt.on_conflict_do_update(
                             constraint="uix_variation_name_value",
                             set_={
@@ -631,10 +666,12 @@ class Saver1C:
                         ).returning(ProductProperty.id)
                         property_result = await self.session.execute(
                             property_do_update_stmt
-                            )
-                        properties_ids.extend([
-                            row.id for row in property_result.fetchall()
-                        ])
+                        )
+                        properties_ids.extend(
+                            [
+                                row.id for row in property_result.fetchall()
+                            ]
+                        )
 
         images_insert_values = []
         for product in products:
@@ -648,7 +685,9 @@ class Saver1C:
                 )
         logger.info(f"Images insert: {len(images_insert_values)}")
         if images_insert_values:
-            images_insert_stmt = insert(ProductImage).values(images_insert_values)
+            images_insert_stmt = insert(ProductImage).values(
+                images_insert_values
+                )
 
             images_do_update_stmt = images_insert_stmt.on_conflict_do_update(
                 constraint="uix_image_product_url",
@@ -659,6 +698,43 @@ class Saver1C:
             ).returning(ProductImage.id)
 
             images_result = await self.session.execute(images_do_update_stmt)
+
+        if variations_insert_values:
+            variation_images_insert_values = []
+            for product in products:
+                for variation in product.variations:
+                    for image in variation.images:
+                        variation_images_insert_values.append(
+                            {
+                                "variation_id": variations_map[variation.uuid_1c],
+                                "url": self._change_url_domain(image.url),
+                                "is_main": image.is_main
+                            }
+                        )
+            logger.info(
+                f"Variation images insert: {len(variation_images_insert_values)}"
+                )
+        if variation_images_insert_values:
+            variation_images_insert_stmt = (
+                insert(ProductVariationImage)
+                .values(variation_images_insert_values)
+            )
+
+            variation_images_do_update_stmt = (
+                variation_images_insert_stmt
+                .on_conflict_do_update(
+                    constraint="uix_image_product_variation_url",
+                    set_={
+                        "variation_id": variation_images_insert_stmt.excluded.variation_id,
+                        "url": variation_images_insert_stmt.excluded.url,
+                        "is_main": variation_images_insert_stmt.excluded.is_main
+                    }
+                )
+            ).returning(ProductVariationImage.id)
+
+            variation_images_result = await self.session.execute(
+                variation_images_do_update_stmt
+            )
 
         await self.session.commit()
 
@@ -700,15 +776,22 @@ class Saver1C:
         await self.session.commit()
 
     async def deactivate_old_products(
-        self, products: list[ProductCreateSchema], properties_ids: list[int]
+        self, products: list[ProductCreateSchema],
+        properties_ids: list[int],
     ):
         products_uuids = [product.uuid_1c for product in products]
         products_variations_uuids = []
         image_urls = []
+        variation_image_urls = []
 
         for product in products:
             for variation in product.variations:
                 products_variations_uuids.append(variation.uuid_1c)
+
+                for image in variation.images:
+                    variation_image_urls.append(
+                        self._change_url_domain(image.url)
+                    )
 
             for image in product.images:
                 image_urls.append(self._change_url_domain(image.url))
@@ -727,7 +810,7 @@ class Saver1C:
 
         await self.session.commit()
 
-        logger.info(f"Images: {len(image_urls)}")
+        logger.info(f"Product Images: {len(image_urls)}")
 
         images_to_delete = await self.session.execute(
             delete(ProductImage).where(ProductImage.url.not_in(image_urls))
@@ -735,8 +818,20 @@ class Saver1C:
 
         await self.session.commit()
 
+        logger.info(f"Variation Images: {len(variation_image_urls)}")
+
+        variation_images_to_delete = await self.session.execute(
+            delete(ProductVariationImage).where(
+                ProductVariationImage.url.not_in(variation_image_urls)
+                )
+        )
+
+        await self.session.commit()
+
         properties_to_delete = await self.session.execute(
-            delete(ProductProperty).where(ProductProperty.id.not_in(properties_ids))
+            delete(ProductProperty).where(
+                ProductProperty.id.not_in(properties_ids)
+                )
         )
 
         await self.session.commit()

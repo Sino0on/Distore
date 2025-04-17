@@ -22,17 +22,22 @@ class ProductPropertyRead(BaseWithORM):
     value: str
 
 
+class ProductImageRead(BaseWithORM):
+    id: int
+    url: str
+    is_main: bool
+
+
+class ProductVariationImageRead(ProductImageRead):
+    pass
+
+
 class ProductVariationRead(BaseWithORM):
     id: int
     price: float
     quantity: int
     properties: List[ProductPropertyRead]
-
-
-class ProductImageRead(BaseWithORM):
-    id: int
-    url: str
-    is_main: bool
+    images: List[ProductVariationImageRead] = []
 
 
 class ProductRead(BaseWithORM):
@@ -63,6 +68,15 @@ class ProductPropertyCreateSchema(BaseWithORM):
     value: str
 
 
+class ProductImageCreateSchema(BaseWithORM):
+    url: str
+    is_main: bool
+
+
+class ProductVariationImageCreateSchema(ProductImageCreateSchema):
+    pass
+
+
 class ProductVariationCreateSchema(BaseWithORM):
     uuid_1c: str
     name: str
@@ -71,11 +85,7 @@ class ProductVariationCreateSchema(BaseWithORM):
     sale_quantity: Optional[int] = 0
 
     properties: List[ProductPropertyCreateSchema]
-
-
-class ProductImageCreateSchema(BaseWithORM):
-    url: str
-    is_main: bool
+    images: List[ProductVariationImageCreateSchema] = []
 
 
 class ProductCreateSchema(BaseWithORM):

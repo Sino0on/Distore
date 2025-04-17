@@ -123,6 +123,12 @@ class ProductVariation(Base, IdIntPkMixin):
         lazy="selectin"
     )
 
+    images: Mapped[list["ProductVariationImage"]] = relationship(
+        back_populates="variation",
+        cascade="all, delete",
+        lazy="selectin",
+    )
+
     def __repr__(self):
         return f"Product: {self.product_id}: {self.price}"
 
@@ -142,3 +148,27 @@ class ProductProperty(Base, IdIntPkMixin):
 
     def __repr__(self):
         return f"{self.name}: {self.value} | variation: {self.variation_id}"
+
+
+class ProductVariationImage(Base, IdIntPkMixin):
+    __tablename__ = "product_variation_images"
+
+    url: Mapped[str]
+    is_main: Mapped[bool] = mapped_column(default=False)
+
+    variation_id: Mapped[int] = mapped_column(
+        ForeignKey("product_variations.id")
+    )
+    variation: Mapped["ProductVariation"] = relationship(
+        back_populates="images"
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "variation_id", "url",
+            name="uix_image_product_variation_url",
+        ),
+    )
+
+    def __repr__(self):
+        return self.url
