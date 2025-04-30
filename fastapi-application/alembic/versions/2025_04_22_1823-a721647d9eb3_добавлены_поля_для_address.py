@@ -25,10 +25,10 @@ def upgrade() -> None:
         "addresss", sa.Column("country_code", sa.String(), nullable=True)
     )
     op.add_column(
-        "addresss", sa.Column("city_uuid", sa.String(), nullable=False)
+        "addresss", sa.Column("city_uuid", sa.String(), nullable=True)
     )
     op.add_column(
-        "addresss", sa.Column("city_code", sa.String(), nullable=False)
+        "addresss", sa.Column("city_code", sa.String(), nullable=True)
     )
     # ### end Alembic commands ###
 
