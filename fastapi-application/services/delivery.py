@@ -29,10 +29,10 @@ class DeliveryService:
         self.client_secret = client_secret
 
     async def get_token(self) -> str:
-        token = self.redis.get(self.token).decode()
+        token = self.redis.get(self.token)
         if token:
             print('cache token')
-            return token
+            return token.decode()
 
         return await self.update_token()
 
