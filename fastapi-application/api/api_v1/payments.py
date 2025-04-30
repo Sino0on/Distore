@@ -7,7 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.api_v1.fastapi_users import current_active_user
 from core.config import settings
 from core.models import db_helper, User
+from core.models.order import OrderStatus
 from core.schemas.payments import PaymentSignature, PaymentResult
+from services.delivery import DeliveryService
+from services.orders import OrderService
 from services.payments import PaymentsService
 
 router = APIRouter(
@@ -57,9 +60,19 @@ async def result_url(
         background_tasks: BackgroundTasks,
 ):
     service = PaymentsService(session)
-
+    order_service = OrderService(session)
     data = await request.form()
-    return await service.result_url_handler(data, background_tasks)
+    result = await service.result_url_handler(data, background_tasks)
+    try:
+        payment_data = PaymentResult(**data)
+        order = await order_service._get_order(payment_data.pg_order_id)
+        if order.status == OrderStatus.paid:
+            sdek_service = DeliveryService(session, settings.redis.url, settings.sdek_config.client_id, settings.sdek_config.client_secret)
+            await sdek_service.create_order(order)
+    except Exception as e:
+        logger.error(e)
+
+    return result
 
 
 @router.post("/get_payment_url")

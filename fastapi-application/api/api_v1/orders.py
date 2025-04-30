@@ -56,10 +56,10 @@ async def create_order_from_cart(
     session: Annotated[AsyncSession, Depends(db_helper.session_getter)],
 ):
     service = OrderService(session)
-    sdek_service = DeliveryService(session, settings.sdek_config.client_id, settings.sdek_config.client_secret)
 
     order = await service.create_order_from_cart(user, order_data=order_data)
-    await sdek_service.create_order(order)
+    service.handle_address_for_order(order_data, user)
+
     return order
 
 

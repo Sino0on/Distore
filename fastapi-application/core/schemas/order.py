@@ -11,7 +11,10 @@ class OrderCreate(BaseModel):
     customer_phone: str
     customer_email: str
     country: str
+    country_code: str
     city: str
+    city_uuid: str
+    city_code: str
     address: str
     comment: str | None = None
     promo_code: str | None = None

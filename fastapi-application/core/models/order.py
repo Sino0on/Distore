@@ -28,7 +28,10 @@ class Order(Base, IdIntPkMixin):
     customer_phone: Mapped[str]
     customer_email: Mapped[str]
     country: Mapped[str]
+    country_code: Mapped[str | None] = mapped_column(default=None)
     city: Mapped[str]
+    city_code: Mapped[str | None] = mapped_column(default=None)
+    city_uuid: Mapped[str | None] = mapped_column(default=None)
     address: Mapped[str]
     comment: Mapped[str | None] = mapped_column(Text)
     status: Mapped[OrderStatus] = mapped_column(

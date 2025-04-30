@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.models import User, Order
+from core.models import User, Order, Address
 from core.models.order import OrderProduct
 from core.schemas.order import OrderCreate, OrderUDSDiscountSchema
 from core.schemas.user import AddressRead
@@ -165,3 +165,53 @@ class OrderService(CalculateTotalPriceMixin):
         await self.session.refresh(order)
 
         return order
+
+    def handle_address_for_order(self, order_data: OrderCreate, user: User):
+        # Предположим что у пользователя может быть только один адрес
+        if not user.address:
+            # Адреса ещё нет — создаем
+            new_address = Address(
+                user_id=user.id,
+                customer_name=order_data.customer_name,
+                customer_phone=order_data.customer_phone,
+                customer_email=order_data.customer_email,
+                country=order_data.country,
+                country_code=order_data.country_code,
+                city=order_data.city,
+                city_uuid=order_data.city_uuid,
+                city_code=order_data.city_code,
+                address=order_data.address,
+                comment=order_data.comment,
+            )
+            self.session.add(new_address)
+        elif not self.addresses_equal(order_data, user.address):
+            # Если есть, но отличается — обновляем
+            self.update_address(user.address, order_data)
+
+        # В любом случае коммит нужно будет сделать потом
+
+    def addresses_equal(self, order_data: OrderCreate, address: Address) -> bool:
+        return (
+                order_data.customer_name == address.customer_name and
+                order_data.customer_phone == address.customer_phone and
+                order_data.customer_email == address.customer_email and
+                order_data.country == address.country and
+                order_data.country_code == address.country_code and
+                order_data.city == address.city and
+                order_data.city_uuid == address.city_uuid and
+                order_data.city_code == address.city_code and
+                order_data.address == address.address and
+                order_data.comment == address.comment
+        )
+
+    def update_address(self, address: Address, order_data: OrderCreate):
+        address.customer_name = order_data.customer_name
+        address.customer_phone = order_data.customer_phone
+        address.customer_email = order_data.customer_email
+        address.country = order_data.country
+        address.country_code = order_data.country_code
+        address.city = order_data.city
+        address.city_uuid = order_data.city_uuid
+        address.city_code = order_data.city_code
+        address.address = order_data.address
+        address.comment = order_data.comment

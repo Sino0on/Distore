@@ -15,16 +15,28 @@ from core.models import Product, Category, CategoryProperty, Brand, User, Order
 from core.schemas import PaginationMetadata
 from core.models.product import ProductVariation, ProductProperty
 from core.schemas.product import ProductPropertiesFilter, ProductResponseWithPagination
+import redis
+
 
 
 class DeliveryService:
-    def __init__(self, session: AsyncSession, client_id: str, client_secret: str):
+    def __init__(self, session: AsyncSession, redis_url, client_id: str, client_secret: str):
         self.session: AsyncSession = session
         self.token: str = ''
+        self.redis = redis.Redis.from_url(redis_url)
+
         self.client_id = client_id
         self.client_secret = client_secret
 
-    async def update_token(self) -> None:
+    async def get_token(self) -> str:
+        token = self.redis.get(self.token).decode()
+        if token:
+            print('cache token')
+            return token
+
+        return await self.update_token()
+
+    async def update_token(self) -> str:
         url = "https://api.cdek.ru/v2/oauth/token"
         headers = {
             "Content-Type": "application/x-www-form-urlencoded"
@@ -39,18 +51,20 @@ class DeliveryService:
             async with http_session.post(url, data=data, headers=headers) as response:
                 if response.status == 200:
                     json_response = await response.json()
-                    self.token = json_response.get("access_token", "")
-                    logger.info(json_response)
+                    access_token = json_response.get("access_token")
+                    expires_in = json_response.get("expires_in", 3600)
+                    self.redis.set(self.token, access_token, ex=expires_in - 60)
+                    return access_token
                 else:
                     error_message = await response.text()
                     raise Exception(f"Failed to update token: {response.status} - {error_message}")
 
 
     async def get_status(self, order_id: int) -> Product:
-        await self.update_token()
+        token = await self.get_token()
         url = f"https://api.edu.cdek.ru/v2/orders/{order_id}"
         headers = {
-            "Authorization": f"Bearer {self.token}"
+            "Authorization": f"Bearer {token}"
         }
         async with aiohttp.ClientSession() as http_session:
             async with http_session.get(url, headers=headers) as response:
@@ -84,12 +98,10 @@ class DeliveryService:
             "tariff_code": 139,
             "comment": f"{order.comment}",
             "to_location": {
-                "city_uuid": "b81c6e67-030a-4770-a52b-4a355955c4f3",
+                "city_uuid": f"{order.city_uuid}",
                 "city": f"{order.city}",
-                "country_code": "KG",
+                "country_code": f"{order.country_code}",
                 "country": "Киргизия",
-                "region": "Чуйская область",
-                "region_code": 537,
                 "address": f"{order.address}"
             },
             "recipient": {
@@ -117,10 +129,10 @@ class DeliveryService:
                 "address": "Медерова 44/1"
             }
         }
-        await self.update_token()
+        token = await self.get_token()
         url = "https://api.edu.cdek.ru/v2/orders"
         headers = {
-            "Authorization": f"Bearer {self.token}"
+            "Authorization": f"Bearer {token}"
         }
         print(payload)
         async with aiohttp.ClientSession() as http_session:
@@ -137,3 +149,26 @@ class DeliveryService:
                     error_message = await response.text()
                     logger.error(response.json())
                     raise Exception(f"Failed to create sdek delivery: {response.status} - {error_message}")
+
+
+    async def get_cities(self, name: str, country_code: str = "RU") -> dict:
+        token = await self.get_token()
+        url = "https://api.edu.cdek.ru/v2/location/suggest/cities"
+        print(token)
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
+        params = {
+            "name": name,
+            "country_code": country_code
+        }
+
+        async with aiohttp.ClientSession() as http_session:
+            async with http_session.get(url, headers=headers, params=params) as response:
+                if response.status == 200:
+                    return await response.json()
+                else:
+                    error_message = await response.text()
+                    logger.error(f"Failed to fetch cities: {response.status} - {error_message}")
+                    raise Exception(f"Failed to fetch cities: {response.status} - {error_message}")

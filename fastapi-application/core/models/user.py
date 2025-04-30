@@ -58,7 +58,10 @@ class Address(Base, IdIntPkMixin):
     customer_phone: Mapped[str]
     customer_email: Mapped[str]
     country: Mapped[str]
+    country_code: Mapped[str]
     city: Mapped[str]
+    city_uuid: Mapped[str]
+    city_code: Mapped[str]
     address: Mapped[str]
     comment: Mapped[str | None] = mapped_column(Text)
 
