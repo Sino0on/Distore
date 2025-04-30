@@ -58,11 +58,11 @@ class Address(Base, IdIntPkMixin):
     customer_phone: Mapped[str]
     customer_email: Mapped[str]
     country: Mapped[str]
-    country_code: Mapped[str]
+    country_code: Mapped[str | None]
     city: Mapped[str]
     city_uuid: Mapped[str]
     city_code: Mapped[str]
-    address: Mapped[str]
+    address: Mapped[str | None]
     comment: Mapped[str | None] = mapped_column(Text)
 
     user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)
