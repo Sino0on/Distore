@@ -58,7 +58,7 @@ class Address(Base, IdIntPkMixin):
     customer_phone: Mapped[str]
     customer_email: Mapped[str]
     country: Mapped[str]
-    country_code: Mapped[str | None] = mapped_column(default=None)
+    country_code: Mapped[str | None] = mapped_column(default=None, nullable=True)
     city: Mapped[str]
     city_uuid: Mapped[str]
     city_code: Mapped[str]
