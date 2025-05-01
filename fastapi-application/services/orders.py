@@ -145,12 +145,12 @@ class OrderService(CalculateTotalPriceMixin):
         return order
 
     async def payment_update(
-        self, order_id: int, status: str, payment_data: dict = None
+        self, order_id: int, status: OrderStatus, payment_data: dict = None
     ):
         order = await self._get_order(order_id)
         is_new_order = False
 
-        if order.payment_status == OrderStatus.paid:
+        if order.status == OrderStatus.paid:
             if order.payment_data:
                 old_data = order.payment_data
                 old_data["data"].append(payment_data)
@@ -164,7 +164,7 @@ class OrderService(CalculateTotalPriceMixin):
             if payment_data:
                 order.payment_data = {"data": [payment_data]}
 
-            order.payment_status = status
+            order.status = status
 
         await self.session.commit()
         await self.session.refresh(order)

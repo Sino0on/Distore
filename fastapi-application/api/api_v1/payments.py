@@ -65,9 +65,16 @@ async def result_url(
     result = await service.result_url_handler(data, background_tasks)
     try:
         payment_data = PaymentResult(**data)
-        order = await order_service._get_order(payment_data.pg_order_id)
+        order = await order_service._get_order(
+            int(payment_data.pg_order_id)
+        )
         if order.status == OrderStatus.paid:
-            sdek_service = DeliveryService(session, settings.redis.url, settings.sdek_config.client_id, settings.sdek_config.client_secret)
+            sdek_service = DeliveryService(
+                session,
+                settings.redis.url,
+                settings.sdek_config.client_id,
+                settings.sdek_config.client_secret,
+            )
             await sdek_service.create_order(order)
     except Exception as e:
         logger.error(e)
