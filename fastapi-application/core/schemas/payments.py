@@ -20,7 +20,7 @@ class PaymentResult(BaseModel):
     pg_ps_currency: Optional[str] = None
     pg_description: str
     pg_result: int
-    pg_payment_date: datetime
+    pg_payment_date: Optional[datetime] = None
     pg_can_reject: int
     pg_user_phone: Optional[str] = None
     pg_user_contact_email: Optional[str] = None

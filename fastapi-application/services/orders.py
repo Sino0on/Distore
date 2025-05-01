@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.models import User, Order, Address
-from core.models.order import OrderProduct
+from core.models.order import OrderProduct, OrderStatus
 from core.schemas.order import OrderCreate, OrderUDSDiscountSchema
 from core.schemas.user import AddressRead
 from services.carts import CartService
@@ -148,15 +148,28 @@ class OrderService(CalculateTotalPriceMixin):
         self, order_id: int, status: str, payment_data: dict = None
     ):
         order = await self._get_order(order_id)
+        is_new_order = False
 
-        if payment_data:
-            order.payment_data = payment_data
+        if order.payment_status == OrderStatus.paid:
+            if order.payment_data:
+                old_data = order.payment_data
+                old_data["data"].append(payment_data)
+                new_data = old_data
+                order.payment_data = new_data
+            else:
+                order.payment_data = {"data": [payment_data]}
+        else:
+            is_new_order = True
 
-        order.payment_status = status
+            if payment_data:
+                order.payment_data = {"data": [payment_data]}
+
+            order.payment_status = status
+
         await self.session.commit()
         await self.session.refresh(order)
 
-        return order
+        return order, is_new_order
 
     async def update_order_code_1c(self, order_id: int, code_1c: str):
         order = await self._get_order(order_id)
