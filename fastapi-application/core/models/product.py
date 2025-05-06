@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import Base
 from .mixins.id_int_pk import IdIntPkMixin
 from .user import user_favorites
+from .banner import banner_products
 
 if TYPE_CHECKING:
     from .user import User
@@ -14,6 +15,7 @@ if TYPE_CHECKING:
     from .category import Category
     from .cart import CartProduct
     from .order import OrderProduct
+    from .banner import Banner
 
 
 class Product(Base, IdIntPkMixin):
@@ -59,6 +61,14 @@ class Product(Base, IdIntPkMixin):
         back_populates="favorites",
         lazy="selectin",
     )
+
+    banners: Mapped[list["Banner"]] = relationship(
+        "Banner",
+        secondary=banner_products,
+        back_populates="products",
+        lazy="selectin"
+    )
+
 
     @property
     def main_image(self) -> "ProductImage | None":

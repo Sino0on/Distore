@@ -4,12 +4,14 @@ from core.admin.brand import BrandAdmin
 from core.admin.category import CategoryAdmin, CategoryPropertyAdmin, CategoryPropertyValueAdmin
 from core.admin.product import ProductAdmin, ProductImageAdmin, ProductVariationAdmin, \
     ProductPropertyAdmin
+from core.admin.banner import BannerAdmin
 from core.models import db_helper
 
 
 def create_admin(app):
     admin = Admin(app, engine=db_helper.engine)
     admin.add_view(BrandAdmin)
+    admin.add_view(BannerAdmin)
 
     admin.add_view(CategoryAdmin)
     admin.add_view(CategoryPropertyAdmin)

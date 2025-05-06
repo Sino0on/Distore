@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-
+from fastapi import Request
 import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
@@ -12,6 +12,7 @@ from core.celery import app as celery_app
 
 from api import router as api_router
 from core.models import db_helper
+from core.models.db_helper import AsyncSessionLocal
 
 
 @asynccontextmanager
@@ -26,6 +27,13 @@ main_app = FastAPI(
     default_response_class=ORJSONResponse,
     lifespan=lifespan,
 )
+
+@main_app.middleware("http")
+async def add_session_to_state(request: Request, call_next):
+    async with AsyncSessionLocal() as session:
+        request.state.session = session
+        response = await call_next(request)
+    return response
 
 main_app.add_middleware(
     CORSMiddleware,

@@ -12,6 +12,7 @@ __all__ = (
     "Product",
     "Cart",
     "Order",
+    "Banner",
 )
 
 from .access_token import AccessToken
@@ -23,3 +24,4 @@ from .category import Group, Category, CategoryProperty, Value
 from .product import Product
 from .cart import Cart
 from .order import Order
+from .banner import Banner

@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     AsyncSession,
 )
+from sqlalchemy.orm import sessionmaker
+
 
 from core.config import settings
 
@@ -48,3 +50,13 @@ db_helper = DatabaseHelper(
     pool_size=settings.db.pool_size,
     max_overflow=settings.db.max_overflow,
 )
+
+engine = create_async_engine(str(settings.db.url), echo=True)
+AsyncSessionLocal = sessionmaker(
+    engine, class_=AsyncSession, expire_on_commit=False
+)
+
+# Зависимость для получения сессии
+async def get_db_session() -> AsyncSession:
+    async with AsyncSessionLocal() as session:
+        yield session

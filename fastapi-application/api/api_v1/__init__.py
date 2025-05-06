@@ -16,6 +16,7 @@ from .orders import router as orders_router
 from .messages import router as messages_router
 from .uds import router as uds_router
 from .help_form import router as help_form_router
+from .banners import router as banner_router
 from .payments import router as payments_router
 from .properties import router as properties_router
 from .delivery import router as delivery_router
@@ -39,4 +40,5 @@ router.include_router(orders_router)
 router.include_router(uds_router)
 router.include_router(payments_router)
 router.include_router(help_form_router)
+router.include_router(banner_router)
 # router.include_router(messages_router)

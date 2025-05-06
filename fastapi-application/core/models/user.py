@@ -25,6 +25,7 @@ user_favorites = Table(
 )
 
 
+
 class User(Base, IdIntPkMixin, SQLAlchemyBaseUserTable[UserIdType]):
     name: Mapped[str] = mapped_column(nullable=True)
     nickname: Mapped[str] = mapped_column(unique=True)
