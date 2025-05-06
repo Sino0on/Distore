@@ -162,9 +162,10 @@ class PaymentsService:
             order_status = OrderStatus.error
 
         order = None
+        is_new_order = False
         if not invalid_data:
             try:
-                order = await self.order_service.payment_update(
+                order, is_new_order = await self.order_service.payment_update(
                     order_id=int(payment_data.pg_order_id),
                     status=order_status,
                     payment_data={**data},
@@ -198,7 +199,7 @@ class PaymentsService:
             <pg_sig>{response_signature.signature}</pg_sig>
         </response>"""
 
-        if order and pg_status == "ok":
+        if order and pg_status == "ok" and is_new_order:
             background_tasks.add_task(
                 self.send_create_1c_order_request,
                 order,
