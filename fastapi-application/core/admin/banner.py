@@ -6,7 +6,7 @@ from wtforms import TextAreaField
 from core.models import Banner, Product, db_helper
 from sqlalchemy.future import select
 from fastapi import Depends
-from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.orm import Session
 
 
 class BannerAdmin(ModelView, model=Banner):
@@ -21,34 +21,34 @@ class BannerAdmin(ModelView, model=Banner):
         "product_ids": TextAreaField("Product IDs (comma-separated)")
     }
 
-    async def on_model_change(
-            self,
-            data: dict,
-            model: Banner,
-            is_created: bool,
-            request: Request,
-            ):
-        # Обрабатываем product_ids
-        async with async_sessionmaker() as session:
-            product_ids_raw = data.get("product_ids", "")
+    def get_session(self, request: Request) -> AsyncSession:
+        return request.state.session
 
-            # Преобразуем строку в список ID
-            id_list = []
-            if product_ids_raw:
-                id_list = [
-                    int(pid.strip())
-                    for pid in product_ids_raw.split(",")
-                    if pid.strip().isdigit()
-                ]
+    async def on_model_change(self, data: dict, model: Banner, is_created: bool, request: Request):
+        session = self.get_session(request)
 
-            # Получаем продукты из базы
+        # 1. Обрабатываем product_ids
+        product_ids_raw = data.get("product_ids", "")
+        product_ids = []
+
+        if product_ids_raw:
+            product_ids = [
+                int(pid.strip())
+                for pid in product_ids_raw.split(",")
+                if pid.strip().isdigit()
+            ]
+
+        # 2. Получаем продукты из базы
+        if product_ids:
             result = await session.execute(
-                select(Product).where(Product.id.in_(id_list))
+                select(Product).where(Product.id.in_(product_ids))
             )
             products = result.scalars().all()
 
-            # Устанавливаем связь с продуктами
+            # 3. Обновляем связь с продуктами
             model.products = products
+        else:
+            model.products = []
 
-            # Продолжаем стандартную обработку
-            await super().on_model_change(data, model, is_created, request)
+        # 4. Вызываем родительский метод для стандартной обработки
+        await super().on_model_change(data, model, is_created, request)
