@@ -27,28 +27,32 @@ class BannerAdmin(ModelView, model=Banner):
     async def on_model_change(self, data: dict, model: Banner, is_created: bool, request: Request):
         session = self.get_session(request)
 
-        # 1. Обрабатываем product_ids
+        # Обработка product_ids
         product_ids_raw = data.get("product_ids", "")
-        product_ids = []
+        product_ids = [
+            int(pid.strip())
+            for pid in product_ids_raw.split(",")
+            if pid.strip().isdigit()
+        ] if product_ids_raw else []
 
-        if product_ids_raw:
-            product_ids = [
-                int(pid.strip())
-                for pid in product_ids_raw.split(",")
-                if pid.strip().isdigit()
-            ]
-
-        # 2. Получаем продукты из базы
+        # Получаем продукты с учетом текущей сессии
         if product_ids:
-            result = await session.execute(
-                select(Product).where(Product.id.in_(product_ids))
-            )
-            products = result.scalars().all()
+            # Вариант 1: Делаем запрос с учетом текущей сессии
+            existing_products = []
+            for pid in product_ids:
+                product = await session.get(Product, pid)
+                if product:
+                    existing_products.append(product)
 
-            # 3. Обновляем связь с продуктами
-            model.products = products
+            # Вариант 2: Альтернативный способ с merge
+            # result = await session.execute(select(Product).where(Product.id.in_(product_ids)))
+            # existing_products = []
+            # for product in result.scalars():
+            #     existing_products.append(await session.merge(product))
+
+            model.products = existing_products
         else:
             model.products = []
 
-        # 4. Вызываем родительский метод для стандартной обработки
+        # Вызываем родительский метод
         await super().on_model_change(data, model, is_created, request)
