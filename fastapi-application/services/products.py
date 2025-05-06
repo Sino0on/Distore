@@ -217,8 +217,8 @@ class ProductService:
         if order_by.order_by_price is not None:
             direction = desc if order_by.order_by_price.startswith("-") else asc
             order_by_dict["price"] = direction(ProductVariation.price)
-
-        if order_by.order_by_created_at is not None:
+        else:
+        # if order_by.order_by_created_at is not None:
             direction = desc if order_by.order_by_created_at.startswith("-") else asc
             order_by_dict["created_at"] = direction(Product.id)
 
