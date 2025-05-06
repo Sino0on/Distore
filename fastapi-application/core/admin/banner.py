@@ -6,6 +6,7 @@ from wtforms import TextAreaField
 from core.models import Banner, Product, db_helper
 from sqlalchemy.future import select
 from fastapi import Depends
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 
 class BannerAdmin(ModelView, model=Banner):
@@ -26,27 +27,28 @@ class BannerAdmin(ModelView, model=Banner):
             model: Banner,
             is_created: bool,
             request: Request,
-            session: Annotated[AsyncSession, Depends(db_helper.session_getter)]):
+            ):
         # Обрабатываем product_ids
-        product_ids_raw = data.get("product_ids", "")
+        async with async_sessionmaker() as session:
+            product_ids_raw = data.get("product_ids", "")
 
-        # Преобразуем строку в список ID
-        id_list = []
-        if product_ids_raw:
-            id_list = [
-                int(pid.strip())
-                for pid in product_ids_raw.split(",")
-                if pid.strip().isdigit()
-            ]
+            # Преобразуем строку в список ID
+            id_list = []
+            if product_ids_raw:
+                id_list = [
+                    int(pid.strip())
+                    for pid in product_ids_raw.split(",")
+                    if pid.strip().isdigit()
+                ]
 
-        # Получаем продукты из базы
-        result = await session.execute(
-            select(Product).where(Product.id.in_(id_list))
-        )
-        products = result.scalars().all()
+            # Получаем продукты из базы
+            result = await session.execute(
+                select(Product).where(Product.id.in_(id_list))
+            )
+            products = result.scalars().all()
 
-        # Устанавливаем связь с продуктами
-        model.products = products
+            # Устанавливаем связь с продуктами
+            model.products = products
 
-        # Продолжаем стандартную обработку
-        await super().on_model_change(data, model, is_created, request)
+            # Продолжаем стандартную обработку
+            await super().on_model_change(data, model, is_created, request)
