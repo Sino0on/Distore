@@ -29,8 +29,8 @@ async def get_banners(
 
 @router.get("/{banner_id}", response_model=BannerRead)
 async def get_banner(
-    category_id: int,
+    banner_id: int,
     session: Annotated[AsyncSession, Depends(db_helper.session_getter)],
 ) -> Category:
     service = BannerService(session)
-    return await service.get_banner(category_id)
+    return await service.get_banner(banner_id)

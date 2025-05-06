@@ -1,10 +1,14 @@
+from typing import Annotated
+
 from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqladmin import ModelView
 from wtforms import TextAreaField
-from core.models import Banner, Product
+from core.models import Banner, Product, db_helper
 from sqlalchemy.future import select
 from sqlalchemy.orm.session import object_session
+from fastapi import APIRouter, Depends, Header
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class BannerAdmin(ModelView, model=Banner):
@@ -15,8 +19,7 @@ class BannerAdmin(ModelView, model=Banner):
         "product_ids": TextAreaField("Product IDs (comma-separated)")
     }
 
-    async def on_model_change(self, data, model, is_created, request: Request):
-        session: AsyncSession = request.state.session
+    async def on_model_change(self, data, model, is_created, session: Annotated[AsyncSession, Depends(db_helper.session_getter)],):
 
         product_ids_raw = data.pop("product_ids", "")
         id_list = [int(pid.strip()) for pid in product_ids_raw.split(",") if pid.strip().isdigit()]
