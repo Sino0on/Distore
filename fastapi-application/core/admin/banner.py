@@ -4,6 +4,7 @@ from sqladmin import ModelView
 from wtforms import TextAreaField
 from core.models import Banner, Product
 from sqlalchemy.orm import object_session
+
 from sqlalchemy.future import select
 
 
@@ -15,21 +16,23 @@ class BannerAdmin(ModelView, model=Banner):
         "product_ids": TextAreaField("Product IDs (comma-separated)")
     }
 
-    async def on_model_change(self, data, model: Banner, is_created: bool, request: Request):
-        # Получаем product_ids из формы
+    async def on_model_change(self, data, model, is_created, request: Request):
+        async_session: AsyncSession = request.state.session
+
         product_ids_raw = data.pop("product_ids", "")
         id_list = [int(pid.strip()) for pid in product_ids_raw.split(",") if pid.strip().isdigit()]
 
-        # Используем сессию, к которой уже прикреплён model
-        session: AsyncSession = object_session(model)
+        async def load_products(session: AsyncSession):
+            result = await session.execute(
+                select(Product).where(Product.id.in_(id_list))
+            )
+            return result.scalars().all()
 
-        # Если object_session вернул None (вдруг), fallback на state.session
-        if session is None:
-            session = request.state.session
+        products = await async_session.run_sync(lambda sync_session: sync_session.execute(
+            select(Product).where(Product.id.in_(id_list))
+        ))  # <-- не сработает напрямую, нужен sync-контекст
 
-        # Загружаем продукты
-        result = await session.execute(select(Product).where(Product.id.in_(id_list)))
-        products = result.scalars().all()
+        # или же:
+        products = await load_products(async_session)
 
-        # Привязываем продукты к баннеру
         model.products = products
