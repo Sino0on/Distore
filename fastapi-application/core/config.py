@@ -26,6 +26,7 @@ class ApiV1Prefix(BaseModel):
     delivery: str = "/delivery"
     carts: str = "/carts"
     orders: str = "/orders"
+    banners: str = "/banners"
     payments: str = "/payments"
     uds: str = "/uds"
     help_form: str = "/help-form"

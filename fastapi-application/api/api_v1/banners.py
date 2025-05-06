@@ -11,7 +11,7 @@ from services.banners import BannerService
 from services.categories import CategoryService
 
 router = APIRouter(
-    prefix=settings.api.v1.categories,
+    prefix=settings.api.v1.banners,
     tags=["Banners"],
 )
 
