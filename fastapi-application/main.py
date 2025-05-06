@@ -26,6 +26,7 @@ async def lifespan(app: FastAPI):
 main_app = FastAPI(
     default_response_class=ORJSONResponse,
     lifespan=lifespan,
+    debug=True
 )
 
 @main_app.middleware("http")

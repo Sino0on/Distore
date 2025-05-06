@@ -29,7 +29,11 @@ class Banner(Base, IdIntPkMixin):
 
     image: Mapped[str]  # путь или URL до изображения
     title: Mapped[str]
+    title_ky: Mapped[str | None] = mapped_column(Text, nullable=True)
+    title_en: Mapped[str | None] = mapped_column(Text, nullable=True)
     description: Mapped[str]
+    description_ky: Mapped[str | None] = mapped_column(Text, nullable=True)
+    description_en: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.utcnow())
 
     products: Mapped[list["Product"]] = relationship(
