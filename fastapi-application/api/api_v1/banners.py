@@ -1,5 +1,6 @@
+from fastapi import APIRouter, Depends, HTTPException, Header, status
 from typing import Annotated
-
+from core.schemas.banner import BannerCreateSchema, BannerUpdateSchema, BannerRead
 from fastapi import APIRouter, Depends, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,3 +35,38 @@ async def get_banner(
 ) -> Category:
     service = BannerService(session)
     return await service.get_banner(banner_id)
+
+
+@router.post("", response_model=BannerRead, status_code=status.HTTP_201_CREATED)
+async def create_banner(
+    banner_data: BannerCreateSchema,
+    session: Annotated[AsyncSession, Depends(db_helper.session_getter)],
+) -> BannerRead:
+    service = BannerService(session)
+    banner = await service.create_banner(banner_data)
+    if not banner:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Could not create banner")
+    return banner
+
+@router.put("/{banner_id}", response_model=BannerRead)
+async def update_banner(
+    banner_id: int,
+    banner_data: BannerUpdateSchema,
+    session: Annotated[AsyncSession, Depends(db_helper.session_getter)],
+) -> BannerRead:
+    service = BannerService(session)
+    banner = await service.update_banner(banner_id, banner_data)
+    if not banner:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Banner not found")
+    return banner
+
+@router.delete("/{banner_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_banner(
+    banner_id: int,
+    session: Annotated[AsyncSession, Depends(db_helper.session_getter)],
+):
+    service = BannerService(session)
+    success = await service.delete_banner(banner_id)
+    if not success:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Banner not found")
+    return None
