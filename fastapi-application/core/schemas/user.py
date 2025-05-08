@@ -55,6 +55,9 @@ class AddressRead(BaseModel):
     customer_phone: str
     customer_email: str
     country: str
+    country_code: str | None = None
     city: str
+    city_uuid: str | None = None
+    city_code: str | None = None
     address: str
     comment: str | None = None

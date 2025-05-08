@@ -3,10 +3,7 @@ from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqladmin import ModelView
 from wtforms import TextAreaField
-from core.models import Banner, Product, db_helper
-from sqlalchemy.future import select
-from fastapi import Depends
-from sqlalchemy.orm import Session
+from core.models import Banner, Product
 
 
 class BannerAdmin(ModelView, model=Banner):
