@@ -39,7 +39,10 @@ class AddressUpdate(BaseModel):
     customer_phone: str | None = None
     customer_email: str | None = None
     country: str | None = None
+    country_code: str | None = None
     city: str | None = None
+    city_uuid: str | None = None
+    city_code: str | None = None
     address: str | None = None
     comment: str | None = None
 
