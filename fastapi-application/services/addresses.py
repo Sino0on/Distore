@@ -41,10 +41,10 @@ class AddressService:
         address.customer_phone = address_data.customer_phone or address.customer_phone
         address.customer_email = address_data.customer_email or address.customer_email
         address.country = address_data.country or address.country
-        address.country_code = address_data.country or address.country_code
+        address.country_code = address_data.country_code or address.country_code
         address.city = address_data.city or address.city
-        address.city_uuid = address_data.city or address.city_uuid
-        address.city_code = address_data.city or address.city_code
+        address.city_uuid = address_data.city_uuid or address.city_uuid
+        address.city_code = address_data.city_code or address.city_code
         address.address = address_data.address or address.address
         address.comment = address_data.comment or address.comment
 
