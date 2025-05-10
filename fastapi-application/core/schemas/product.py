@@ -55,6 +55,7 @@ class ProductRead(BaseWithORM):
     images: List[ProductImageRead] = []
     variations: List[ProductVariationRead]
     main_image: ProductImageRead | None = None
+    is_favorite: bool = False
 
 
     class Config:

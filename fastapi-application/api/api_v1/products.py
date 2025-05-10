@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Body
 from fastapi_filter import FilterDepends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.api_v1.fastapi_users import current_active_user
+from api.api_v1.fastapi_users import current_active_user, current_active_user_optional
 from api.dependencies.pagination import Pagination
 from api.dependencies.product.ordering import Ordering
 from core.config import settings
@@ -90,8 +90,9 @@ async def unset_favorite_product(
 @router.get("/{product_id}", response_model=ProductRead)
 async def get_product(
     product_id: int,
+    user: User = Depends(current_active_user_optional),
     session: AsyncSession = Depends(db_helper.session_getter),
 ) -> ProductRead:
     service = ProductService(session)
 
-    return await service.get_product(product_id)
+    return await service.get_product(product_id, user)

@@ -1,5 +1,6 @@
 from typing import List
 
+from fastapi import HTTPException, status
 from loguru import logger
 from sqlalchemy import select, desc, asc, Select, and_, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,14 +12,15 @@ from core.filters.products import ProductFilter, PropertyFilter
 from core.models import Product, Category, CategoryProperty, Brand, User
 from core.schemas import PaginationMetadata
 from core.models.product import ProductVariation, ProductProperty
-from core.schemas.product import ProductPropertiesFilter, ProductResponseWithPagination
+from core.schemas.product import ProductPropertiesFilter, \
+    ProductResponseWithPagination, ProductRead
 
 
 class ProductService:
     def __init__(self, session: AsyncSession):
         self.session: AsyncSession = session
 
-    async def get_product(self, product_id: int) -> Product:
+    async def _get_product(self, product_id: int) -> Product:
         stmt = (
             select(Product)
             .where(Product.id == product_id)
@@ -34,6 +36,33 @@ class ProductService:
             .options(joinedload(Product.images))
         )
         result = await self.session.scalar(stmt)
+
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Product with id={product_id} not found"
+            )
+
+        return result
+
+    async def get_product(
+        self,
+        product_id: int,
+        user: User = None,
+    ) -> ProductRead:
+        product = await self._get_product(product_id)
+
+        result = ProductRead.model_validate(product)
+
+        if user:
+            # Check if product is in user's favorites
+            is_favorite_stmt = (
+                select(Product)
+                .join(User.favorites)
+                .where(and_(User.id == user.id, Product.id == product_id))
+            )
+            is_favorite_result = await self.session.scalar(is_favorite_stmt)
+            result.is_favorite = is_favorite_result is not None
 
         return result
 
@@ -370,12 +399,12 @@ class ProductService:
         )
 
     async def set_favorite_product(self, user: User, product_id: int):
-        product = await self.get_product(product_id)
+        product = await self._get_product(product_id)
         user.favorites.append(product)
         await self.session.commit()
 
     async def unset_favorite_product(self, user: User, product_id: int):
-        product = await self.get_product(product_id)
+        product = await self._get_product(product_id)
 
         try:
             user.favorites.remove(product)
