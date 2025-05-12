@@ -45,8 +45,6 @@ class PaymentsService:
             script_name: str = "init_payment.php"):
         # Сортировка параметров и генерация подписи
         sorted_params = dict(sorted(params.items()))
-        sorted_params.pop("pg_sig")
-
         signature_elements = [script_name] + [
             str(value)
             for value in sorted_params.values()
@@ -133,8 +131,12 @@ class PaymentsService:
 
         if not invalid_data:
             check_signature = await self.check_signature(
-                data.get('pg_sig', ''),
-                data,
+                payment_data.pg_sig,
+                payment_data.model_dump(
+                    exclude_unset=True,
+                    exclude_none=True,
+                    exclude={"pg_sig"},
+                ),
                 "result_url",
             )
 
