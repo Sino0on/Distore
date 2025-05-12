@@ -687,7 +687,7 @@ class Saver1C:
         if images_insert_values:
             images_insert_stmt = insert(ProductImage).values(
                 images_insert_values
-                )
+            )
 
             images_do_update_stmt = images_insert_stmt.on_conflict_do_update(
                 constraint="uix_image_product_url",
@@ -699,8 +699,9 @@ class Saver1C:
 
             images_result = await self.session.execute(images_do_update_stmt)
 
+        variation_images_insert_values = []
+
         if variations_insert_values:
-            variation_images_insert_values = []
             for product in products:
                 for variation in product.variations:
                     for image in variation.images:
@@ -713,7 +714,8 @@ class Saver1C:
                         )
             logger.info(
                 f"Variation images insert: {len(variation_images_insert_values)}"
-                )
+            )
+
         if variation_images_insert_values:
             variation_images_insert_stmt = (
                 insert(ProductVariationImage)

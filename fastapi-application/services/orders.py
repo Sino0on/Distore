@@ -4,6 +4,7 @@ from fastapi import HTTPException
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from core.models import User, Order, Address
 from core.models.order import OrderProduct, OrderStatus
@@ -74,12 +75,20 @@ class OrderService(CalculateTotalPriceMixin):
         return order
 
     async def _get_order(self, order_id: int) -> Type[Order]:
-        order = await self.session.get(Order, order_id)
+        stmt = (
+            select(Order)
+            .where(Order.id == order_id)
+            .options(
+                selectinload(Order.products)
+                .selectinload(OrderProduct.product_variation)
+            )
+        )
+        result = await self.session.scalar(stmt)
 
-        if not order:
+        if not result:
             raise HTTPException(status_code=404, detail="Order not found")
 
-        return order
+        return result
 
     async def get_order(self, user: User, order_id: int) -> Type[Order]:
         order = await self._get_order(order_id)
@@ -88,7 +97,8 @@ class OrderService(CalculateTotalPriceMixin):
             return order
 
         raise HTTPException(
-            status_code=403, detail="You don't have permission to see this order"
+            status_code=403,
+            detail="You don't have permission to see this order",
         )
 
     async def delete_order(self, user: User, order_id: int):
@@ -159,7 +169,8 @@ class OrderService(CalculateTotalPriceMixin):
             else:
                 order.payment_data = {"data": [payment_data]}
         else:
-            is_new_order = True
+            if order.status not in (OrderStatus.canceled, OrderStatus.error):
+                is_new_order = True
 
             if payment_data:
                 order.payment_data = {"data": [payment_data]}
@@ -170,6 +181,27 @@ class OrderService(CalculateTotalPriceMixin):
         await self.session.refresh(order)
 
         return order, is_new_order
+
+    async def update_payment_response(
+        self,
+        response_text: str,
+        order_id: int
+    ):
+        order = await self._get_order(order_id)
+
+        if order.payment_responses:
+            old_data = order.payment_responses
+            old_data["data"].append(response_text)
+            new_data = old_data
+            order.payment_responses = new_data
+        else:
+            order.payment_responses = {"data": [response_text]}
+
+        await self.session.commit()
+        await self.session.refresh(order)
+
+        return order
+
 
     async def update_order_code_1c(self, order_id: int, code_1c: str):
         order = await self._get_order(order_id)
