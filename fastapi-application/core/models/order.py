@@ -47,6 +47,7 @@ class Order(Base, IdIntPkMixin):
     final_price: Mapped[float]
     uds_transaction_id: Mapped[int | None] = mapped_column(default=None)
     payment_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    payment_responses: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     created_at = mapped_column(DateTime, default=lambda: datetime.utcnow())
     updated_at = mapped_column(

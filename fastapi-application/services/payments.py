@@ -199,6 +199,10 @@ class PaymentsService:
             <pg_sig>{response_signature.signature}</pg_sig>
         </response>"""
 
+        order = await self.order_service.update_payment_response(
+            response_xml, order.id
+        )
+
         if order and pg_status == "ok" and is_new_order:
             background_tasks.add_task(
                 self.send_create_1c_order_request,
@@ -213,9 +217,26 @@ class PaymentsService:
                         total_price=order.total_price,
                         points=0,
                     )
+                    order.uds_transaction_id = uds_transaction.id
+                    await self.session.commit()
                 except Exception as e:
                     logger.error(
                         f"Error creating uds transaction for order: {order.id}"
+                        )
+                    logger.error(e)
+        elif order and pg_status != "ok" and is_new_order:
+            if order.uds_transaction_id:
+                try:
+                    uds_service = UDSService(self.session, order.user)
+                    await uds_service.refund_transaction(
+                        order.uds_transaction_id
+                    )
+                    order.uds_transaction_id = None
+                    await self.session.commit()
+                except Exception as e:
+                    logger.error(
+                        f"Error refunding uds transaction "
+                        f"for order: {order.id}"
                         )
                     logger.error(e)
 
