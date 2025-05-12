@@ -1,7 +1,6 @@
 from typing import Type, Sequence
 
 from fastapi import HTTPException
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -160,22 +159,21 @@ class OrderService(CalculateTotalPriceMixin):
         order = await self._get_order(order_id)
         is_new_order = False
 
-        if order.status == OrderStatus.paid:
-            if order.payment_data:
-                old_data = order.payment_data
-                old_data["data"].append(payment_data)
-                new_data = old_data
-                order.payment_data = new_data
-            else:
-                order.payment_data = {"data": [payment_data]}
-        else:
-            if order.status not in (OrderStatus.canceled, OrderStatus.error):
-                is_new_order = True
+        if order.status not in (
+                OrderStatus.canceled,
+                OrderStatus.error,
+                OrderStatus.paid
+        ):
+            is_new_order = True
 
-            if payment_data:
-                order.payment_data = {"data": [payment_data]}
-
+        if order.status != OrderStatus.paid:
             order.status = status
+
+        if payment_data:
+            existing_data = order.payment_data.get(
+                "data", []
+                ) if order.payment_data else []
+            order.payment_data = {"data": [*existing_data, payment_data]}
 
         await self.session.commit()
         await self.session.refresh(order)
@@ -189,13 +187,10 @@ class OrderService(CalculateTotalPriceMixin):
     ):
         order = await self._get_order(order_id)
 
-        if order.payment_responses:
-            old_data = order.payment_responses
-            old_data["data"].append(response_text)
-            new_data = old_data
-            order.payment_responses = new_data
-        else:
-            order.payment_responses = {"data": [response_text]}
+        existing_data = order.payment_responses.get(
+            "data", []
+        ) if order.payment_responses else []
+        order.payment_responses = {"data": [*existing_data, response_text]}
 
         await self.session.commit()
         await self.session.refresh(order)
