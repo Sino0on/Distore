@@ -14,8 +14,8 @@ class BannerService:
     async def get_banners(self):
         stmt = select(Banner).where(Banner.status == True)
         result = await self.session.scalars(stmt)
-        logger.info(type(result))
-        logger.info(result)
+        # logger.info(type(result))
+        logger.info("Dastan")
         return result.unique().all()
 
     async def get_banner(self, banner_id: int) -> Banner:

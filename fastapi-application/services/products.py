@@ -248,11 +248,11 @@ class ProductService:
             order_by_dict["price"] = direction(ProductVariation.price)
         else:
             direction = desc
-            order_by_dict["created_at"] = direction(Product.id)
+            order_by_dict["-id"] = direction(Product.id)
 
         if order_by.order_by_created_at is not None:
             direction = desc if order_by.order_by_created_at.startswith("-") else asc
-            order_by_dict["created_at"] = direction(Product.id)
+            order_by_dict["id"] = direction(Product.id)
         order_by_list = [order_by_dict[i.strip(" -")] for i in order_by.order_by_list]
 
         if order_by_list:
