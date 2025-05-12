@@ -45,6 +45,8 @@ class PaymentsService:
             script_name: str = "init_payment.php"):
         # Сортировка параметров и генерация подписи
         sorted_params = dict(sorted(params.items()))
+        sorted_params.pop("pg_sig")
+
         signature_elements = [script_name] + [
             str(value)
             for value in sorted_params.values()
