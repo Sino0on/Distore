@@ -14,7 +14,7 @@ class BannerRead(BaseModel):
     title_ky: str
     title_en: str
     description: str
-    description_ru: str
+    description_en: str
     description_ky: str
     status: bool
     products: list[ProductRead]
