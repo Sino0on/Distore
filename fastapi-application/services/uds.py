@@ -151,13 +151,17 @@ class UDSService:
         logger.info(f"Requesting UDS refund for transaction: {transaction_id}")
 
         response = requests.post(
-            url=self.UDS_TRANSACTION_REFUND_URL,
-            json={"id": transaction_id},
+            url=self.UDS_TRANSACTION_REFUND_URL.format(
+                transaction_id=transaction_id
+            ),
             auth=self.AUTH,
             headers=self._default_headers(),
         )
 
-        logger.info(f"Response (UDS refund) status code: {response.status_code}")
+        logger.info(
+            f"Response (UDS refund) status code: {response.status_code}"
+        )
+        logger.info(f"Response (UDS refund): {response.text}")
 
     async def calculate_transaction_info(
         self,

@@ -234,8 +234,6 @@ class PaymentsService:
                     await uds_service.refund_transaction(
                         order.uds_transaction_id
                     )
-                    order.uds_transaction_id = None
-                    await self.session.commit()
                 except Exception as e:
                     logger.error(
                         f"Error refunding uds transaction "
