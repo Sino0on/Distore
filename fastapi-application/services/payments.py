@@ -130,13 +130,12 @@ class PaymentsService:
             invalid_data = True
 
         if not invalid_data:
+            params = dict(data)
+            params.pop("pg_sig")
+
             check_signature = await self.check_signature(
                 payment_data.pg_sig,
-                payment_data.model_dump(
-                    exclude_unset=True,
-                    exclude_none=True,
-                    exclude={"pg_sig"},
-                ),
+                params,
                 "result_url",
             )
 
@@ -275,7 +274,7 @@ class PaymentsService:
             "pg_merchant_id": settings.freedom_pay_config.merchant_id,
             "pg_amount": order.final_price,
             "pg_currency": "KGS",
-            "pg_description": f"Order #{order.id}\nCustomer: {user.nickname}",
+            "pg_description": f"Order #{order.id}. Customer: {user.nickname}",
             "pg_salt": 'distore',
         }
 
