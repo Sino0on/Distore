@@ -43,6 +43,9 @@ class ProductService:
                 detail=f"Product with id={product_id} not found"
             )
 
+        # Filter out variations with quantity = 0 after loading
+        result.variations = [v for v in result.variations if v.quantity > 0]
+
         return result
 
     async def get_product(
