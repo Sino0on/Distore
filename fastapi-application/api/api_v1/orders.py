@@ -118,3 +118,17 @@ async def get_order(
     service = OrderService(session)
 
     return await service.get_order(user, order_id)
+
+
+@router.post("/new_from_old/", response_model=OrderRead)
+async def new_order_from_old(
+    user: Annotated[
+        User,
+        Depends(current_active_user),
+    ],
+    session: Annotated[AsyncSession, Depends(db_helper.session_getter)],
+    order_id: int = Body(..., ge=1, embed=True),
+):
+    service = OrderService(session)
+
+    return await service.copy_order(user, order_id)

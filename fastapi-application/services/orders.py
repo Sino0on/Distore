@@ -255,3 +255,46 @@ class OrderService(CalculateTotalPriceMixin):
         address.city_code = order_data.city_code
         address.address = order_data.address
         address.comment = order_data.comment
+
+    async def copy_order(self, user: User, order_id: int) -> Order:
+        original_order = await self.get_order(user, order_id)
+
+        if original_order.status not in (OrderStatus.canceled, OrderStatus.error, OrderStatus.paid):
+            raise HTTPException(status_code=400, detail="Order is not paid or canceled")
+        
+        # Create new order with same user and address details
+        new_order = Order(
+            user=user,
+            total_price=original_order.total_price,
+            final_price=original_order.total_price,
+            customer_name=original_order.customer_name,
+            customer_phone=original_order.customer_phone,
+            customer_email=original_order.customer_email,
+            country=original_order.country,
+            country_code=original_order.country_code,
+            city=original_order.city,
+            city_uuid=original_order.city_uuid,
+            city_code=original_order.city_code,
+            address=original_order.address,
+            comment=original_order.comment,
+            delivery=original_order.delivery,
+            # Reset status-related fields
+            status=OrderStatus.created,
+            discount=0,
+        )
+
+        # Copy products
+        for order_product in original_order.products:
+            new_order.products.append(
+                OrderProduct(
+                    order=new_order,
+                    product_variation=order_product.product_variation,
+                    quantity=order_product.quantity,
+                )
+            )
+
+        self.session.add_all([new_order, *new_order.products])
+        await self.session.commit()
+        await self.session.refresh(new_order)
+
+        return new_order
