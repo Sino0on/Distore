@@ -13,6 +13,7 @@ class BannerRead(BaseModel):
     title: str
     title_ky: str
     title_en: str
+    image: str
     description: str
     description_en: str
     description_ky: str
@@ -25,6 +26,7 @@ class BannerCreateSchema(BaseModel):
     image: str
     title: str
     title_ky: Optional[str] = None
+    image: str
     title_en: Optional[str] = None
     description: str
     description_ky: Optional[str] = None
@@ -49,6 +51,7 @@ class BannerResponseSchema(BaseModel):
     title: str
     title_ky: Optional[str] = None
     title_en: Optional[str] = None
+    image: Optional[str] = None
     description: str
     description_ky: Optional[str] = None
     description_en: Optional[str] = None
