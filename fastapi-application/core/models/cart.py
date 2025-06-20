@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -33,6 +33,19 @@ class CartProduct(Base, IdIntPkMixin):
     product_variation: Mapped["ProductVariation"] = relationship(
         back_populates="cart_products",
         lazy="joined",
+    )
+
+    parent_cart_product_id: Mapped[int | None] = mapped_column(
+        ForeignKey("cart_products.id"),
+        nullable=True,
+    )
+    parent: Mapped[Optional["CartProduct"]] = relationship(
+        back_populates="children", remote_side="CartProduct.id"
+    )
+    children: Mapped[list["CartProduct"]] = relationship(
+        back_populates="parent",
+        cascade="all, delete-orphan",
+        lazy="selectin",
     )
 
     quantity: Mapped[int] = mapped_column(default=1)
