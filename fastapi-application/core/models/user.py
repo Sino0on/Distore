@@ -41,6 +41,7 @@ class User(Base, IdIntPkMixin, SQLAlchemyBaseUserTable[UserIdType]):
     orders: Mapped[list["Order"]] = relationship(
         back_populates="user",
         lazy="joined",
+        order_by="Order.id",
     )
 
     favorites: Mapped[list["Product"]] = relationship(
