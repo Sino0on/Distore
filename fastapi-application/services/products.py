@@ -249,14 +249,18 @@ class ProductService:
         if order_by.order_by_price is not None:
             direction = desc if order_by.order_by_price.startswith("-") else asc
             order_by_dict["price"] = direction(ProductVariation.price)
-        else:
-            direction = desc
-            order_by_dict["-id"] = direction(Product.id)
 
         if order_by.order_by_created_at is not None:
             direction = desc if order_by.order_by_created_at.startswith("-") else asc
-            order_by_dict["id"] = direction(Product.id)
-        order_by_list = [order_by_dict[i.strip(" -")] for i in order_by.order_by_list]
+            order_by_dict["created_at"] = direction(Product.created_at)
+
+        if "created_at" not in order_by_dict and "price" not in order_by_dict:
+            order_by_dict["-id"] = desc(Product.id)
+
+        try:
+            order_by_list = [order_by_dict[i.strip(" -")] for i in order_by.order_by_list]
+        except KeyError as e:
+            raise ValueError(f"Unsupported ordering field: {e}") from e
 
         if order_by_list:
             stmt = stmt.order_by(*order_by_list)
